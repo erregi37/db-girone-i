@@ -726,8 +726,9 @@ function renderProfile(){
       <div class="row">
         <div class="field"><label for="eFoot">Piede</label><select id="eFoot" ${canWrite?"":"disabled"}>${["","Destro","Sinistro","Ambidestro"].map(f=>`<option${f===(p.piede||"")?" selected":""}>${f}</option>`).join("")}</select></div>
         <div class="field"><label for="eTeam">Squadra</label><select id="eTeam" ${canWrite?"":"disabled"}>${TEAMS.map(t=>`<option${t===p.squadra?" selected":""}>${t}</option>`).join("")}</select></div>
-        <div class="field" style="flex:0 0 90px"><label for="eNum">Numero</label><input id="eNum" type="number" inputmode="numeric" min="1" max="99" value="${esc(numFor(p,p.squadra)??"")}" ${canWrite?"":"disabled"}></div>
+        <div class="field" style="flex:0 1 200px"><label for="eNum">Numero alla ${esc(p.squadra)}</label><input id="eNum" type="number" inputmode="numeric" min="1" max="99" value="${esc(numFor(p,p.squadra)??"")}" ${canWrite?"":"disabled"}></div>
       </div>
+      ${(p.ex||[]).length?`<div class="row">${p.ex.map((t,k)=>`<div class="field" style="flex:0 1 200px"><label for="exn${k}">Numero alla ${esc(t)}</label><input id="exn${k}" data-exnum="${esc(t)}" type="number" inputmode="numeric" min="1" max="99" value="${esc(numFor(p,t)??"")}" ${canWrite?"":"disabled"}></div>`).join("")}</div><p class="note" style="margin:0">Il numero di maglia vale per squadra: quello sopra è per la ${esc(p.squadra)}, questi per le squadre in cui ha giocato prima. Nelle partite vecchie si usa il numero della squadra di allora.</p>`:""}
       ${canWrite?`<div class="row" style="justify-content:space-between"><button type="submit">Salva scheda</button><span id="delWrap"><button type="button" class="danger small" id="delP">Elimina giocatore</button></span></div>`:""}
     </form>
   </div>`;
@@ -1426,7 +1427,8 @@ function show(v){
   document.querySelectorAll("nav.tabs a").forEach(a=>{if(a.dataset.v===v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
   render();
 }
-function openPlayer(pid){S.pid=pid;show("giocatore");window.scrollTo(0,0)}
+const BACKL={ricerca:"alla ricerca",rose:"alla rosa",giornate:"alle giornate",rete:"alla rete passaggi",partite:"alle partite",tagging:"alla rilevazione"};
+function openPlayer(pid){if(S.view!=="giocatore")S.back=S.view;$("#backBtn").textContent="← Torna "+(BACKL[S.back]||"alla ricerca");S.pid=pid;show("giocatore");window.scrollTo(0,0)}
 function render(){
   const played=Object.values(CAL).filter(m=>m.golCasa!=null);
   const done=played.filter(m=>CALAB.filter(t=>t===m.casa||t===m.trasferta).every(t=>coverage(m,t).k==="ok")).length;
@@ -1483,12 +1485,13 @@ $("#roster").addEventListener("click",e=>{
   if(e.target.id==="rDir"){RSORT.dir=-RSORT.dir;renderRoster();return}
   const tr=e.target.closest("tr[data-pid]");if(tr)openPlayer(tr.dataset.pid)});
 $("#roster").addEventListener("change",e=>{if(e.target.id==="rSort"){const k=e.target.value;RSORT={k,dir:RDESC.includes(k)?-1:1};renderRoster()}});
-$("#backBtn").onclick=()=>go("ricerca");
+$("#backBtn").onclick=()=>go(S.back||"ricerca");
 
 $("#profile").addEventListener("submit",async e=>{e.preventDefault();if(!db)return;
   const val={};QUAL.forEach(([k])=>{const n=+$("#q_"+k).value;if(n)val[k]=n});
   const old=S.players[S.pid],nt=$("#eTeam").value,ex=[...new Set([...(old.ex||[]),...(nt!==old.squadra?[old.squadra]:[])])].filter(x=>x!==nt);
   const num=$("#eNum").value===""?null:+$("#eNum").value,numeri={...(old.numeri||{})};if(nt!==old.squadra&&old.numero!=null&&numeri[old.squadra]==null)numeri[old.squadra]=old.numero;if(num==null)delete numeri[nt];else numeri[nt]=num;
+  document.querySelectorAll("#profile [data-exnum]").forEach(x=>{const t=x.dataset.exnum;if(t===nt)return;if(x.value==="")delete numeri[t];else numeri[t]=+x.value});
   try{await db.doc("players/"+S.pid).set({...old,ex,numeri,numero:num,valutazioni:val,note:$("#pNote").value,ruolo:$("#eRole").value,posizione:$("#ePos").value||null,anno:+$("#eYear").value||null,piede:$("#eFoot").value,squadra:nt});toast("Scheda salvata")}
   catch(err){toast("Salvataggio non riuscito")}
 });
