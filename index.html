@@ -222,6 +222,8 @@ body.tagopen{overflow:hidden}
 .sheet{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:center;justify-content:center;z-index:40;padding:12px}
 .sheet[hidden]{display:none!important}
 .sheet .card{background:var(--surface);color:var(--ink);border-radius:8px;width:min(620px,100%);max-height:100%;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.plist[hidden],.plist button[hidden],#sheetCard .label[hidden]{display:none!important}
+#pkQ{margin:2px 0 4px}
 .plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
 .plist button{background:var(--bg);color:var(--ink);border:1px solid var(--line);text-align:left;display:flex;gap:8px;align-items:center;font-weight:500}
 .plist button b{font-family:var(--f-display);font-size:1.1rem;min-width:28px}
@@ -1124,14 +1126,23 @@ function openSheet(html){const c=$("#sheetCard");c.onclick=null;c.oninput=null;c
 function closeSheet(){$("#sheet").hidden=true;$("#sheetCard").innerHTML="";T.regOpen=false;T.editing=null}
 $("#sheet").addEventListener("click",e=>{if(e.target.id==="sheet"||e.target.closest("[data-close]"))closeSheet()});
 function teamRoster(){return Object.entries(S.players).filter(([,p])=>p.squadra===T.s.squadra||(p.ex||[]).includes(T.s.squadra)).sort((a,b)=>(+numFor(a[1],T.s.squadra)||99)-(+numFor(b[1],T.s.squadra)||99)||norm(a[1].nome).localeCompare(norm(b[1].nome)))}
-function plistHTML(rows,attr,benchSet){return `<div class="plist">${rows.map(([pid,p])=>`<button type="button" ${attr}="${pid}" class="${benchSet&&benchSet.has(pid)?"bench":""}"><b>${esc(T.s.nums[pid]??numFor(p,T.s.squadra)??"")}</b><span>${esc(p.nome)}<br><small class="muted">${esc(p.ruolo||"")}${p.squadra!==T.s.squadra?" · ora "+esc(p.squadra):""}</small></span></button>`).join("")}</div>`}
+function plistHTML(rows,attr,benchSet){return `<div class="plist">${rows.map(([pid,p])=>`<button type="button" ${attr}="${pid}" data-q="${esc(norm(p.nome)+" "+norm(lastName(p.nome))+" "+(T.s.nums[pid]??numFor(p,T.s.squadra)??""))}" class="${benchSet&&benchSet.has(pid)?"bench":""}"><b>${esc(T.s.nums[pid]??numFor(p,T.s.squadra)??"")}</b><span>${esc(p.nome)}<br><small class="muted">${esc(posName(p.posizione)||roleLabel(p.ruolo)||"")}${p.squadra!==T.s.squadra?" · ora "+esc(p.squadra):""}</small></span></button>`).join("")}</div>`}
 function openSlotPicker(i){
   const s=T.s,sl=s.lineup.slots[i],used=new Set(s.lineup.slots.map(x=>x.pid).filter(Boolean));
   const rows=teamRoster().filter(([pid])=>!used.has(pid)||pid===sl.pid);
+  const fam=POS2ROLE[sl.pos];
+  const fits=([pid,p])=>posOf(pid)===sl.pos||p.ruolo===fam||roleOf(pid)===fam||((AGG[pid]||{}).posMin||{})[sl.pos]>0;
+  const top=rows.filter(fits),rest=rows.filter(r=>!fits(r));
   openSheet(`<div class="row" style="justify-content:space-between;align-items:center"><h3>${esc(POS[sl.pos]||sl.pos)}</h3><button type="button" class="ghost small" data-close>Chiudi</button></div>
-  ${rows.length?plistHTML(rows,"data-pk"):`<p class="muted">Nessun giocatore di ${esc(s.squadra)} in rosa: aggiungilo qui sotto o importa la rosa.</p>`}
+  ${rows.length>6?`<input id="pkQ" type="search" placeholder="Cerca per nome o numero" autocomplete="off" aria-label="Cerca giocatore">`:""}
+  ${rows.length?(top.length?`<span class="label">Adatti a ${esc((POS[sl.pos]||sl.pos).toLowerCase())}</span>${plistHTML(top,"data-pk")}`:"")+(rest.length?`<span class="label" style="margin-top:6px">${top.length?"Altri giocatori":"Tutta la rosa"}</span>${plistHTML(rest,"data-pk")}`:""):`<p class="muted">Nessun giocatore di ${esc(s.squadra)} in rosa: aggiungilo qui sotto o importa la rosa.</p>`}
   ${sl.pid?`<button type="button" class="ghost small" data-clear>Svuota posizione</button>`:""}
   <details><summary class="muted" style="cursor:pointer">Giocatore non in rosa</summary><div class="row" style="margin-top:8px"><div class="field"><label for="qName">Nome e cognome</label><input id="qName"></div><div class="field" style="flex:0 0 80px"><label for="qNum">Numero</label><input id="qNum" type="number" inputmode="numeric"></div><button type="button" data-qadd>Aggiungi</button></div></details>`);
+  const q=$("#pkQ");if(q){if(matchMedia("(pointer:fine)").matches)q.focus();
+    q.addEventListener("input",()=>{const v=norm(q.value).trim();
+      $("#sheetCard").querySelectorAll("[data-pk]").forEach(b=>{const d=b.dataset.q,w=d.split(" ");b.hidden=!!v&&(/^\d+$/.test(v)?w[w.length-1]!==v:!(w.some(x=>x.startsWith(v))||d.includes(v)))});
+      $("#sheetCard").querySelectorAll(".plist").forEach(l=>{const vis=[...l.children].some(b=>!b.hidden);l.hidden=!vis;const lab=l.previousElementSibling;if(lab&&lab.classList.contains("label"))lab.hidden=!vis})});
+    q.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();const f=[...$("#sheetCard").querySelectorAll("[data-pk]")].find(b=>!b.hidden);if(f)f.click()}})}
   const card=$("#sheetCard");
   card.onclick=async e=>{
     const pk=e.target.closest("[data-pk]");
