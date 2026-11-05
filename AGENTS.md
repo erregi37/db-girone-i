@@ -14,5 +14,7 @@ Vale per persone, Claude, ChatGPT e qualsiasi altro assistente.
 - In fondo a `index.html`, `makeDb()` offre al resto della pagina un'interfaccia tipo Firestore (`db.collection(c).onSnapshot`, `db.doc("coll/id").set/update/delete/get/onSnapshot`) sopra la tabella `docs`, con aggiornamenti in tempo reale via Supabase Realtime.
 - Accesso: email e password (Supabase Auth). Permessi nella tabella `profili` (`attesa`, `lettore`, `editor`, `admin`), applicati dal database con RLS, non solo dall'interfaccia.
 - Ruolo e posizione: `ruolo` (POR, DC, TER, CEN, EST, TRQ, ATT) è la famiglia; `posizione` (es. TD, TS, QD, MEZ, CC, SP) è il posto preciso, scelto nella scheda o, se vuoto, quello con più minuti negli schieramenti (`posOf`). Mappa in `POSBYROLE`. Il quinto (QD/QS) è un'unica posizione, nella famiglia Esterni.
+- xG: `xgOf(e)` calcola l'xG di ogni tiro dai campi salvati sull'evento (`x` 0–68 larghezza, `d` 0–52,5 metri dalla linea di porta, `bp` parte del corpo, `sit` situazione, `oo` solo davanti al portiere). Il valore non viene salvato: si ricalcola, quindi il modello si può ritoccare senza perdere dati. Rigore = 0,79.
+- Presenze: `writeIdx` salva in `sessidx/<id>.pres` chi è stato schierato o è entrato, con la posizione; `aggregate` le conta finché la partita non è inviata.
 - Rilevazione: ogni sessione è un documento `sessions/<id>` con il registro degli eventi (`log`); le statistiche si ricalcolano dal registro (`replay`, `computeSess`).
 - Librerie da CDN con versione fissa: SheetJS 0.18.5, supabase-js 2.118.0.

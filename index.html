@@ -294,6 +294,17 @@ body.tagopen{overflow:hidden}
 .egrid .sep{grid-column:1/-1;margin-top:2px}
 .sheet{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:center;justify-content:center;z-index:40;padding:12px}
 .sheet[hidden]{display:none!important}
+.sheet .card.wide{width:min(900px,100%)}
+.shotgrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (orientation:portrait) and (max-width:700px){.shotgrid{grid-template-columns:minmax(0,1fr)}}
+.shotpitch{width:100%;max-height:min(62vh,420px);display:block;touch-action:manipulation;cursor:crosshair;background:var(--pitch,#1f5d3a);border-radius:6px}
+.shotpitch .ln{fill:none;stroke:rgba(255,255,255,.75);stroke-width:.35}
+.shotpitch .mk{fill:var(--accent);stroke:#fff;stroke-width:.5}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:600}
+.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink,#06121f)}
+.xgval{font-family:var(--f-display);font-size:2rem;line-height:1;color:var(--accent)}
+@media (max-height:450px){.sheet .card.wide{padding:10px;gap:6px}.chips button{padding:5px 10px;font-size:.85rem}.xgval{font-size:1.4rem}.shotgrid .label{margin-bottom:2px}.shotpitch{max-height:calc(100vh - 110px)}}
 .sheet .card{background:var(--surface);color:var(--ink);border-radius:8px;width:min(620px,100%);max-height:100%;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
 .plist[hidden],.plist button[hidden],#sheetCard .label[hidden]{display:none!important}
 #pkQ{margin:2px 0 4px}
@@ -632,7 +643,7 @@ const INDK=Object.fromEntries(IND.map(i=>[i.k,i]));
 const DEF={
  gol:"Rete segnata, autogol esclusi. Comprende i gol su rigore.",gol_rig:"Rete segnata su calcio di rigore.",
  assist:"Calcolato in automatico: passaggio riuscito al compagno che segna subito dopo, senza altri eventi in mezzo.",
- xg:"Probabilità che il tiro diventi gol, da 0 a 1, secondo la tabella concordata (distanza, angolo, parte del corpo, tipo di azione). Rigore = 0,76.",
+ xg:"Expected goals: probabilità che un tiro diventi gol (da 0 a 1). Si calcola da dove si tira (distanza e angolo verso la porta, con un modello di regressione logistica pubblicato da Soccermatics), parte del corpo (la testa vale meno del piede), situazione (contropiede, palla inattiva, punizione diretta) e se il tiratore era solo davanti al portiere. Rigore = 0,79. I tiri registrati senza posizione non hanno xG.",
  tiri:"Ogni conclusione verso la porta: in porta, fuori o murata.",tiri_porta:"Tiro che finisce in porta o che il portiere deve parare. Il tiro murato da un difensore non conta.",
  key_pass:"Passaggio riuscito giocato nella trequarti offensiva (tasto KP subito dopo il passaggio).",
  pass_tot:"Ogni passaggio tentato, cross esclusi: riusciti più sbagliati (X).",pass_ok:"Passaggio che arriva al compagno.",pass_ric:"Passaggio riuscito ricevuto da un compagno.",pass_av:"Passaggio riuscito verso la porta avversaria (tasto ↑ subito dopo il passaggio). Senza tasto il passaggio conta come orizzontale.",pass_ind:"Passaggio riuscito verso la propria porta (tasto ↓ subito dopo il passaggio).",
@@ -1004,6 +1015,58 @@ function replay(s,upto,onEntry){
   }
   return{slots,mod};
 }
+/* ---------- xG ----------
+   Modello logistico (Soccermatics, Premier League 2017/18, Wyscout): distanza D e angolo A verso la porta,
+   più termini X (distanza dalla linea di porta) e C (distanza dal centro). Poi correzioni per parte del corpo e situazione.
+   Coordinate salvate sull'evento: x = 0..68 (larghezza, da sinistra), d = 0..52,5 (metri dalla linea di porta). */
+const XG_BP={dx:0,sx:0,testa:-1.0,altro:-0.6};
+const XG_SIT={az:0,cp:0.35,pi:-0.2,pun:-0.25};
+function xgOf(e){
+  if(!e||!SHOTS.has(e.c))return null;
+  if(e.c==="GOLR"||e.sit==="rig")return 0.79;
+  if(e.d==null||e.x==null)return null;
+  const X=Math.max(0.5,+e.d),C=Math.abs(+e.x-34),D=Math.hypot(X,C);
+  let A=Math.atan(7.32*X/(X*X+C*C-3.66*3.66));if(A<0)A+=Math.PI;
+  let z=0.5103+0.6338*A-0.2798*D+0.1243*X-0.0300*C+0.0014*X*X+0.0041*C*C-0.1251*A*X;
+  z+=(XG_BP[e.bp]||0)+(XG_SIT[e.sit]||0)+(e.oo?1.0:0);
+  return Math.min(0.95,Math.max(0.01,1/(1+Math.exp(-z))));
+}
+const BP_L={dx:"Destro",sx:"Sinistro",testa:"Testa",altro:"Altro"};
+const SIT_L={az:"Azione",cp:"Contropiede",pi:"Palla inattiva",pun:"Punizione diretta",rig:"Rigore"};
+function pitchSVG(){return `<svg class="shotpitch" id="shotPitch" viewBox="-1 -2.5 70 56" role="img" aria-label="Metà campo d'attacco: tocca il punto del tiro">
+  <rect class="ln" x="0" y="0" width="68" height="52.5"/><rect class="ln" x="13.84" y="0" width="40.32" height="16.5"/><rect class="ln" x="24.84" y="0" width="18.32" height="5.5"/>
+  <rect class="ln" x="30.34" y="-2" width="7.32" height="2" style="stroke-width:.6"/><circle cx="34" cy="11" r=".45" fill="rgba(255,255,255,.8)"/>
+  <path class="ln" d="M26.69 16.5 A9.15 9.15 0 0 0 41.31 16.5"/><path class="ln" d="M24.85 52.5 A9.15 9.15 0 0 1 43.15 52.5"/>
+  <g id="shotMk"></g></svg>`}
+function openShotSheet(c,a){
+  const p=S.players[a]||{};
+  const st={x:null,d:null,bp:p.piede==="Sinistro"?"sx":"dx",sit:"az",oo:0};
+  const chips=(k,o)=>`<div class="chips" role="group">${Object.entries(o).map(([v,l])=>`<button type="button" data-${k}="${v}" aria-pressed="${st[k]===v}">${l}</button>`).join("")}</div>`;
+  openSheet(`<div class="row" style="justify-content:space-between;align-items:center"><h3>${esc(EVK[c].l)} · ${esc(numOf(T.s,a))} ${esc(surname(a))}</h3><button type="button" class="ghost small" data-close>Annulla</button></div>
+  <div class="shotgrid"><div>${pitchSVG()}<p class="note" style="margin:4px 0 0">Tocca il punto da cui ha calciato. La porta è in alto.</p></div>
+  <div class="stack" style="gap:10px"><div><span class="label">Parte del corpo</span>${chips("bp",BP_L)}</div>
+  <div><span class="label">Situazione</span>${chips("sit",SIT_L)}</div>
+  <div class="chips"><button type="button" data-oo aria-pressed="false">Solo davanti al portiere</button></div>
+  <div class="row" style="align-items:flex-end;justify-content:space-between"><div><span class="label">xG</span><div class="xgval" id="shotXg">—</div></div>
+  <div class="row"><button type="button" class="ghost" id="shotNoPos">Senza posizione</button><button type="button" id="shotOk" disabled>Salva tiro</button></div></div></div></div>`);
+  $("#sheetCard").classList.add("wide");
+  const upd=()=>{const card=$("#sheetCard");
+    card.querySelectorAll("[data-bp]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.bp===st.bp));
+    card.querySelectorAll("[data-sit]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.sit===st.sit));
+    card.querySelector("[data-oo]").setAttribute("aria-pressed",!!st.oo);
+    if(st.sit==="rig"){st.x=34;st.d=11}
+    $("#shotMk").innerHTML=st.x!=null?`<circle class="mk" cx="${st.x}" cy="${st.d}" r="1.3"/>`:"";
+    const v=xgOf({c,...st});$("#shotXg").textContent=v==null?"—":fmt(v);$("#shotOk").disabled=v==null};
+  const save=withPos=>{const e={t:"e",c,a,bp:st.bp,sit:st.sit};if(st.oo)e.oo=1;if(withPos&&st.x!=null){e.x=Math.round(st.x*10)/10;e.d=Math.round(st.d*10)/10}
+    closeSheet();$("#sheetCard").classList.remove("wide");pushEntry(e);const v=xgOf(e);toast(`${EVK[c].l} ${surname(a)}${v!=null?" · xG "+fmt(v):""}`)};
+  $("#shotPitch").addEventListener("pointerdown",ev=>{const svg=ev.currentTarget,pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;
+    const q=pt.matrixTransform(svg.getScreenCTM().inverse());st.x=Math.min(68,Math.max(0,q.x));st.d=Math.min(52.5,Math.max(0,q.y));if(st.sit==="rig")st.sit="az";upd()});
+  $("#sheetCard").onclick=ev=>{const t=ev.target.closest("button");if(!t)return;
+    if(t.dataset.bp){st.bp=t.dataset.bp;upd()}else if(t.dataset.sit){st.sit=t.dataset.sit;upd()}
+    else if(t.hasAttribute("data-oo")){st.oo=st.oo?0:1;upd()}
+    else if(t.id==="shotOk")save(true);else if(t.id==="shotNoPos")save(false)};
+  upd();
+}
 function computeSess(s){
   const fine=+s.fine||90,R={};
   const row=pid=>R[pid]||(R[pid]={min:0,tot:{},pos:{},in:null,out:null,tit:false});
@@ -1021,7 +1084,8 @@ function computeSess(s){
     const k=pid=>keyOf(slots,mod,pid);
     if(e.t==="p"){add(e.a,"pass_tot",k(e.a));add(e.a,"pass_ok",k(e.a));add(e.b,"pass_ric",k(e.b));if(e.kp)add(e.a,"key_pass",k(e.a));if(e.dir==="f")add(e.a,"pass_av",k(e.a));if(e.dir==="b")add(e.a,"pass_ind",k(e.a));
       const n=nextEv(i);if(n&&n.t==="e"&&n.a===e.b&&(n.c==="GOL"||n.c==="GOLR"))add(e.a,"assist",k(e.a))}
-    else if(e.t==="e"){if(e.c==="GS"){const gk=slots.find(x=>x.pos==="POR"&&x.pid);if(gk)add(gk.pid,"gol_subiti",k(gk.pid))}else(EV_INC[e.c]||[]).forEach(m=>add(e.a,m,k(e.a)))}
+    else if(e.t==="e"){if(e.c==="GS"){const gk=slots.find(x=>x.pos==="POR"&&x.pid);if(gk)add(gk.pid,"gol_subiti",k(gk.pid))}else{(EV_INC[e.c]||[]).forEach(m=>add(e.a,m,k(e.a)));
+      const xv=xgOf(e);if(xv!=null&&e.a){const r=row(e.a);r.tot.xg=(r.tot.xg||0)+xv;const key=k(e.a);if(key){const p=r.pos[key]||(r.pos[key]={min:0,tot:{}});p.tot.xg=(p.tot.xg||0)+xv}}}}
     else if(e.t==="sub"){const m=mm(e,i);const key=k(e.o);stop(e.o,m);start(e.i,m,key)}
     else if(e.t==="red"){add(e.a,"rossi",k(e.a));stop(e.a,mm(e,i))}
     else if(e.t==="pos"){const m=mm(e,i),ka=k(e.b),kb=k(e.a);stop(e.a,m);stop(e.b,m);start(e.a,m,ka);start(e.b,m,kb)}
@@ -1032,7 +1096,7 @@ function computeSess(s){
 }
 function code(s,e){
   if(e.t==="p")return `${numOf(s,e.a)}-${numOf(s,e.b)}${e.dir==="f"?" AV":e.dir==="b"?" IN":""}${e.kp?" KP":""}`;
-  if(e.t==="e")return e.c==="GS"?"GS":`${numOf(s,e.a)} ${e.c}`;
+  if(e.t==="e"){if(e.c==="GS")return"GS";const xv=xgOf(e);return `${numOf(s,e.a)} ${e.c}${SHOTS.has(e.c)&&e.bp?" "+(e.bp==="testa"?"TESTA":e.bp.toUpperCase()):""}${e.sit&&e.sit!=="az"&&e.c!=="GOLR"?" "+SIT_L[e.sit].toUpperCase():""}${xv!=null?" xG "+fmt(xv):""}`}
   const mt=e.m!=null&&e.m!==""?e.m+"' ":"";
   if(e.t==="sub")return `${mt}CAMBIO ${numOf(s,e.o)}>${numOf(s,e.i)}`;
   if(e.t==="pos")return `${mt}RUOLO ${numOf(s,e.a)}<>${numOf(s,e.b)}`;
@@ -1204,7 +1268,10 @@ $("#tside").addEventListener("click",e=>{
     if(c==="KP"||c==="AV"||c==="IN"){const at=T.ins==null?s.log.length:T.ins;const prev=s.log[at-1];if(prev&&prev.t==="p"){if(c==="KP")prev.kp=prev.kp?0:1;else{const d=c==="AV"?"f":"b";prev.dir=prev.dir===d?null:d}persist();renderTagger();if(T.regOpen&&!T.editing)renderRegistro()}else toast("Va premuto subito dopo un passaggio riuscito");return}
     if(EVK[c].team){pushEntry({t:"e",c,a:null});return}
     if(!T.sel){toast("Tocca prima il giocatore");return}
-    const a=T.sel;T.sel=KEEP.has(c)?a:null;pushEntry({t:"e",c,a});return}
+    const a=T.sel;T.sel=KEEP.has(c)?a:null;
+    if(c==="GOLR"){const p=S.players[a]||{};pushEntry({t:"e",c,a,sit:"rig",bp:p.piede==="Sinistro"?"sx":"dx",x:34,d:11});return}
+    if(SHOTS.has(c)){renderTagger();openShotSheet(c,a);return}
+    pushEntry({t:"e",c,a});return}
   const act=e.target.closest("[data-a]");if(!act)return;const a=act.dataset.a;
   if(a==="undo"){const at=T.ins==null?s.log.length:T.ins;if(!at){toast("Niente da annullare");return}const gone=s.log.splice(at-1,1)[0];if(T.ins!=null)T.ins--;T.sel=null;persist();renderTagger();toast("Annullato: "+code(s,gone));return}
   if(a==="sub"){T.mode="sub";T.sel=null;hint("Tocca il giocatore che esce");renderTagger()}
@@ -1218,7 +1285,7 @@ $("#tside").addEventListener("click",e=>{
 
 /* --- fogli --- */
 function openSheet(html){const c=$("#sheetCard");c.onclick=null;c.oninput=null;c.innerHTML=html;$("#sheet").hidden=false}
-function closeSheet(){$("#sheet").hidden=true;$("#sheetCard").innerHTML="";T.regOpen=false;T.editing=null}
+function closeSheet(){$("#sheet").hidden=true;$("#sheetCard").classList.remove("wide");$("#sheetCard").innerHTML="";T.regOpen=false;T.editing=null}
 $("#sheet").addEventListener("click",e=>{if(e.target.id==="sheet"||e.target.closest("[data-close]"))closeSheet()});
 function teamRoster(){return Object.entries(S.players).filter(([,p])=>p.squadra===T.s.squadra||(p.ex||[]).includes(T.s.squadra)).sort((a,b)=>(+numFor(a[1],T.s.squadra)||99)-(+numFor(b[1],T.s.squadra)||99)||norm(a[1].nome).localeCompare(norm(b[1].nome)))}
 function plistHTML(rows,attr,benchSet){return `<div class="plist">${rows.map(([pid,p])=>`<button type="button" ${attr}="${pid}" data-q="${esc(norm(p.nome)+" "+norm(lastName(p.nome))+" "+(T.s.nums[pid]??numFor(p,T.s.squadra)??""))}" class="${benchSet&&benchSet.has(pid)?"bench":""}"><b>${esc(T.s.nums[pid]??numFor(p,T.s.squadra)??"")}</b><span><span class="pn">${esc(p.nome)}</span><small class="muted">${esc(posName(p.posizione)||roleLabel(p.ruolo)||"")}${p.squadra!==T.s.squadra?" · ora "+esc(p.squadra):""}</small></span></button>`).join("")}</div>`}
@@ -1357,7 +1424,9 @@ async function exportSess(s){
   const w1=XLSX.utils.aoa_to_sheet(d);w1["!cols"]=[{wch:8},{wch:26},{wch:9},{wch:24},{wch:9},{wch:9},{wch:8},{wch:60}];
   const w2=XLSX.utils.aoa_to_sheet(ev);w2["!cols"]=[{wch:6},{wch:16},{wch:44}];
   const w3=XLSX.utils.aoa_to_sheet(cr);w3["!cols"]=[{wch:8},{wch:18},{wch:44}];
-  XLSX.utils.book_append_sheet(wb,w1,"Distinta");XLSX.utils.book_append_sheet(wb,w2,"Eventi");XLSX.utils.book_append_sheet(wb,w3,"Cronologia");XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(chunks),"_sessione");
+  const tiri=[["#","Numero","Giocatore","Esito","Parte del corpo","Situazione","Solo davanti al portiere","Distanza dalla porta (m)","Posizione laterale (m dal centro, + destra)","xG"],...s.log.map((e,i)=>[e,i]).filter(([e])=>e.t==="e"&&SHOTS.has(e.c)).map(([e,i])=>{const xv=xgOf(e),p=S.players[e.a]||{};return [i+1,s.nums[e.a]??"",p.nome||"?",EVK[e.c].l,BP_L[e.bp]||"",SIT_L[e.sit]||"",e.oo?"Sì":"",e.d!=null?Math.round(Math.hypot(e.d,e.x-34)*10)/10:"",e.x!=null?Math.round((e.x-34)*10)/10:"",xv!=null?Math.round(xv*100)/100:""]})];
+  const w4=XLSX.utils.aoa_to_sheet(tiri);w4["!cols"]=[{wch:5},{wch:7},{wch:24},{wch:14},{wch:14},{wch:16},{wch:10},{wch:12},{wch:14},{wch:6}];
+  XLSX.utils.book_append_sheet(wb,w1,"Distinta");XLSX.utils.book_append_sheet(wb,w4,"Tiri e xG");XLSX.utils.book_append_sheet(wb,w2,"Eventi");XLSX.utils.book_append_sheet(wb,w3,"Cronologia");XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(chunks),"_sessione");
   await saveFile(`G${s.giornata} ${s.casa} - ${s.trasferta} (${s.squadra}).xlsx`,XLSX.write(wb,{type:"array",bookType:"xlsx"}));
 }
 async function sendSess(s){
