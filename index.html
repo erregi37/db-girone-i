@@ -64,7 +64,7 @@ nav.tabs a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 120px}
 .field label{font-size:.8rem;font-weight:600;color:var(--muted)}
-input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:7px 9px;min-width:0;width:100%}
+input,select,textarea{box-sizing:border-box;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:7px 9px;min-width:0;width:100%}
 textarea{min-height:90px;resize:vertical}
 input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 button{font:inherit;font-weight:600;cursor:pointer;border-radius:4px;padding:8px 14px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink)}
@@ -291,6 +291,9 @@ nav.tabs a[hidden]{display:none}
         <div class="row">
           <div class="field"><label for="fTeam">Squadra</label><select id="fTeam"></select></div>
           <div class="field"><label for="fRole">Ruolo</label><select id="fRole"></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="fPos">Posizione</label><select id="fPos"></select></div>
         </div>
         <div class="row">
           <div class="field"><label for="fYear">Nati dal</label><input id="fYear" type="number" min="1980" max="2012" placeholder="es. 2006"></div>
@@ -557,6 +560,11 @@ const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const norm=s=>String(s??"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
 const GENERIC=["","difesa","difensore","centrocampo","centrocampista","attacco","attaccante"];
 const POS2ROLE={POR:"POR",TD:"TER",TS:"TER",DC:"DC",BR:"DC",QD:"EST",QS:"EST",ED:"EST",ES:"EST",AD:"EST",AS:"EST",REG:"CEN",MED:"CEN",MEZ:"CEN",CC:"CEN",TRQ:"TRQ",SP:"TRQ",PC:"ATT"};
+const POSBYROLE={POR:["POR"],DC:["DC","BR"],TER:["TD","TS"],CEN:["REG","MED","MEZ","CC"],EST:["ED","ES","QD","QS","AD","AS"],TRQ:["TRQ","SP"],ATT:["PC"]};
+const posName=k=>({POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Regista",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"})[k]||k||"";
+/* posizione principale: quella scelta nella scheda, altrimenti quella con più minuti negli schieramenti */
+function posOf(pid){const p=S.players[pid]||{};return p.posizione||topPos(pid)}
+function posOpts(r,cur){return `<option value="">Automatica (dagli schieramenti)</option>`+(POSBYROLE[r]||[]).map(k=>`<option value="${k}"${k===cur?" selected":""}>${esc(posName(k))}</option>`).join("")}
 function topPos(pid){const a=AGG[pid];if(!a||!a.posMin)return null;const e=Object.entries(a.posMin).sort((x,y)=>y[1]-x[1]);return e.length&&e[0][1]>0?e[0][0]:null}
 function roleOf(pid){const p=S.players[pid]||{};const gen=GENERIC.includes(String(p.ruolo_dettaglio||"").trim().toLowerCase())||!p.ruolo;const tp=topPos(pid);return gen&&tp?POS2ROLE[tp]||p.ruolo:p.ruolo}
 const roleLabel=k=>(ROLES.find(r=>r[0]===k)||[k,k||"—"])[1];
@@ -613,13 +621,14 @@ function critRow(c,i){
 function renderCrits(){$("#crits").innerHTML=S.crit.length?S.crit.map(critRow).join(""):`<p class="muted" style="margin:0;font-size:.88rem">Nessun criterio: aggiungine uno, per esempio key pass /90 sopra la media del ruolo.</p>`}
 function renderSearch(){
   const minMin=+$("#fMin").value||0;BENCH=bench(minMin);
-  const team=$("#fTeam").value,role=$("#fRole").value,year=+$("#fYear").value||0,foot=$("#fFoot").value,q=norm($("#fName").value);
+  const team=$("#fTeam").value,role=$("#fRole").value,fpos=$("#fPos").value,year=+$("#fYear").value||0,foot=$("#fFoot").value,q=norm($("#fName").value);
   const qual=$("#fQual").value,qmin=+$("#fQualMin").value;
   const cols=S.crit.length?[...new Set(S.crit.map(c=>c.k))]:["gol","assist","xg","key_pass","duelli_pct"];
   let rows=[];
   for(const [pid,p] of Object.entries(S.players)){
     const a=AGG[pid]||{min:0,pres:0,tot:{}};
-    if(team&&p.squadra!==team)continue;if(role&&roleOf(pid)!==role)continue;
+    if(team&&p.squadra!==team)continue;if(role&&roleOf(pid)!==role&&!(POSBYROLE[role]||[]).includes(posOf(pid)))continue;
+    if(fpos&&posOf(pid)!==fpos&&!((a.posMin||{})[fpos]>0))continue;
     if(year&&!(+p.anno>=year))continue;if(foot&&p.piede!==foot)continue;
     if(q&&!norm(p.nome).includes(q))continue;
     if(qual&&!((p.valutazioni||{})[qual]>=qmin))continue;
@@ -643,13 +652,13 @@ function renderSearch(){
   if(!total){$("#results").innerHTML=`<div class="panel empty"><h3>Il database è vuoto</h3><p>Inserisci le rose nella scheda Rose oppure carica direttamente una partita: i giocatori nuovi vengono creati in automatico.</p><p><button type="button" onclick="go('partite')">Carica la prima partita</button></p></div>`;return}
   if(!rows.length){$("#results").innerHTML=`<div class="panel empty"><h3>Nessun giocatore con questi filtri</h3><p>Abbassa i minuti minimi o togli un criterio.${Object.keys(S.matches).length?"":" Non ci sono ancora partite caricate, quindi tutti hanno 0 minuti."}</p></div>`;return}
   const arrow=k=>sk.k===k?(sk.dir>0?" ↑":" ↓"):"";
-  const head=`<tr><th class="sort" data-s="nome">Giocatore${arrow("nome")}</th><th>Squadra</th><th>Ruolo</th><th class="sort n" data-s="anno">Anno${arrow("anno")}</th><th class="sort n" data-s="min">Min${arrow("min")}</th>${cols.map(k=>`<th class="sort n" data-s="${k}">${esc(INDK[k].l)}${arrow(k)}</th>`).join("")}</tr>`;
+  const head=`<tr><th class="sort" data-s="nome">Giocatore${arrow("nome")}</th><th>Squadra</th><th>Ruolo</th><th>Posizione</th><th class="sort n" data-s="anno">Anno${arrow("anno")}</th><th class="sort n" data-s="min">Min${arrow("min")}</th>${cols.map(k=>`<th class="sort n" data-s="${k}">${esc(INDK[k].l)}${arrow(k)}</th>`).join("")}</tr>`;
   const body=rows.slice(0,400).map(({pid,p,a})=>{
     const cells=cols.map(k=>{const ind=INDK[k];const v=val(a,ind);const b=BENCH.role(ind,roleOf(pid));
       let d="";if(v!=null&&b!=null&&b!==0){const diff=(v-b)/Math.abs(b)*100;const good=ind.low?diff<0:diff>0;d=`<span class="delta ${good?"up":"down"}">${diff>0?"+":""}${Math.round(diff)}%</span>`}
       return `<td class="n">${fmtInd(ind,v)}${d}</td>`}).join("");
     const fq=+p.anno>=2005?` <span class="chip fq">${esc(String(p.anno).slice(2))}</span>`:"";
-    return `<tr class="click" data-pid="${pid}" tabindex="0"><td class="pname">${esc(p.nome)}${fq}</td><td><span class="row" style="gap:8px;flex-wrap:nowrap;align-items:center">${badge(p.squadra)}${esc(p.squadra)}</span></td><td>${esc(roleOf(pid)||"—")}</td><td class="n">${esc(p.anno||"—")}</td><td class="n">${a.min}</td>${cells}</tr>`}).join("");
+    return `<tr class="click" data-pid="${pid}" tabindex="0"><td class="pname">${esc(p.nome)}${fq}</td><td><span class="row" style="gap:8px;flex-wrap:nowrap;align-items:center">${badge(p.squadra)}${esc(p.squadra)}</span></td><td>${esc(roleOf(pid)||"—")}</td><td>${esc(posName(posOf(pid))||"—")}</td><td class="n">${esc(p.anno||"—")}</td><td class="n">${a.min}</td>${cells}</tr>`}).join("");
   $("#results").innerHTML=`<div class="tablebox"><table><thead>${head}</thead><tbody>${body}</tbody></table></div><p class="note">Accanto a ogni valore, lo scarto rispetto alla media del suo ruolo. Clicca un giocatore per il profilo.</p>`;
 }
 
@@ -669,7 +678,7 @@ function renderProfile(){
   $("#profile").innerHTML=`
   <div class="panel stack">
     <div class="prof-head">
-      <div class="stack" style="gap:4px"><span class="label">${esc(p.squadra)} · ${esc(roleLabel(RO))}${TP?` · in campo soprattutto ${esc((POS[TP]||TP).toLowerCase())}`:""}${p.ruolo_dettaglio&&RO!==p.ruolo?` · in rosa: ${esc(p.ruolo_dettaglio)}`:""}</span><h2>${esc(p.nome)}</h2></div>
+      <div class="stack" style="gap:4px"><span class="label">${esc(p.squadra)} · ${esc(roleLabel(RO))}${p.posizione?` · ${esc(posName(p.posizione).toLowerCase())}`:""}${TP&&TP!==p.posizione?` · in campo soprattutto ${esc((POS[TP]||TP).toLowerCase())}`:""}${p.ruolo_dettaglio&&RO!==p.ruolo?` · in rosa: ${esc(p.ruolo_dettaglio)}`:""}</span><h2>${esc(p.nome)}</h2></div>
       <div class="facts">
         <div><span class="label">Anno</span><b>${esc(p.anno||"—")}</b></div>
         <div><span class="label">Piede</span><b>${esc(p.piede||"—")}</b></div>
@@ -697,6 +706,7 @@ function renderProfile(){
       <h3>Anagrafica</h3>
       <div class="row">
         <div class="field"><label for="eRole">Ruolo</label><select id="eRole" ${canWrite?"":"disabled"}>${ROLES.map(r=>`<option value="${r[0]}"${r[0]===p.ruolo?" selected":""}>${r[1]}</option>`).join("")}</select></div>
+        <div class="field"><label for="ePos">Posizione</label><select id="ePos" ${canWrite?"":"disabled"}>${posOpts(p.ruolo,p.posizione)}</select></div>
         <div class="field" style="flex:0 0 100px"><label for="eYear">Anno</label><input id="eYear" type="number" value="${esc(p.anno||"")}" ${canWrite?"":"disabled"}></div>
       </div>
       <div class="row">
@@ -816,7 +826,7 @@ function renderGloss(){
 }
 
 /* ================= RILEVAZIONE (pulsantiera) ================= */
-const POS={POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Regista",MED:"Mediano",MEZ:"Mezzala",CC:"Centrale di centrocampo",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"};
+const POS={POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Regista",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"};
 const B4=[["POR",6,50],["TS",24,12],["DC",21,37],["DC",21,63],["TD",24,88]],B3=[["POR",6,50],["BR",22,22],["DC",19,50],["BR",22,78]];
 const FORM={
  "4-3-3":[...B4,["MEZ",50,25],["REG",41,50],["MEZ",50,75],["AS",76,15],["PC",83,50],["AD",76,85]],
@@ -1410,7 +1420,7 @@ function render(){
 
 /* ---------- init UI ---------- */
 function opts(list,first){return (first?`<option value="">${first}</option>`:"")+list.map(x=>Array.isArray(x)?`<option value="${x[0]}">${esc(x[1])}</option>`:`<option>${esc(x)}</option>`).join("")}
-$("#fTeam").innerHTML=opts(TEAMS,"Tutte");$("#fRole").innerHTML=opts(ROLES,"Tutti");
+$("#fTeam").innerHTML=opts(TEAMS,"Tutte");$("#fRole").innerHTML=opts(ROLES,"Tutti");fillFPos();
 $("#fQual").innerHTML=opts(QUAL,"Nessun filtro");
 $("#mHome").innerHTML=opts(TEAMS,"—");$("#mAway").innerHTML=opts(TEAMS,"—");
 $("#rTeam").innerHTML=opts(CALAB);$("#pRole").innerHTML=opts(ROLES);
@@ -1420,7 +1430,11 @@ $("#pitch").addEventListener("keydown",e=>{if(e.key===" "&&e.target.matches(".do
 try{const t=localStorage.getItem("og_team");if(t&&CALAB.includes(t))$("#rTeam").value=t}catch(e){}
 renderCrits();
 
+document.addEventListener("change",e=>{if(e.target.id==="eRole"&&$("#ePos"))$("#ePos").innerHTML=posOpts(e.target.value,$("#ePos").value)});
+function fillFPos(){const r=$("#fRole").value,cur=$("#fPos").value,list=r?POSBYROLE[r]||[]:Object.values(POSBYROLE).flat();
+  $("#fPos").innerHTML=`<option value="">Tutte</option>`+list.map(k=>`<option value="${k}"${k===cur?" selected":""}>${esc(posName(k))}</option>`).join("")}
 $("#filters").addEventListener("input",e=>{
+  if(e.target.id==="fRole")fillFPos();
   const c=e.target.closest(".crit");
   if(c){const i=+c.dataset.i,f=e.target.dataset.f;S.crit[i][f]=e.target.value;if(f==="c")renderCrits();if(f==="k")S.sort=null}
   renderSearch();
@@ -1440,7 +1454,7 @@ $("#profile").addEventListener("submit",async e=>{e.preventDefault();if(!db)retu
   const val={};QUAL.forEach(([k])=>{const n=+$("#q_"+k).value;if(n)val[k]=n});
   const old=S.players[S.pid],nt=$("#eTeam").value,ex=[...new Set([...(old.ex||[]),...(nt!==old.squadra?[old.squadra]:[])])].filter(x=>x!==nt);
   const num=$("#eNum").value===""?null:+$("#eNum").value,numeri={...(old.numeri||{})};if(nt!==old.squadra&&old.numero!=null&&numeri[old.squadra]==null)numeri[old.squadra]=old.numero;if(num==null)delete numeri[nt];else numeri[nt]=num;
-  try{await db.doc("players/"+S.pid).set({...old,ex,numeri,numero:num,valutazioni:val,note:$("#pNote").value,ruolo:$("#eRole").value,anno:+$("#eYear").value||null,piede:$("#eFoot").value,squadra:nt});toast("Scheda salvata")}
+  try{await db.doc("players/"+S.pid).set({...old,ex,numeri,numero:num,valutazioni:val,note:$("#pNote").value,ruolo:$("#eRole").value,posizione:$("#ePos").value||null,anno:+$("#eYear").value||null,piede:$("#eFoot").value,squadra:nt});toast("Scheda salvata")}
   catch(err){toast("Salvataggio non riuscito")}
 });
 $("#profile").addEventListener("click",async e=>{
@@ -1507,6 +1521,7 @@ $("#rPrev").addEventListener("click",async e=>{if(e.target.id!=="rSave"||!db||!R
 $("#glossList").addEventListener("click",async e=>{const k=e.target.dataset.gsave;if(!k||!db)return;
   try{await db.doc("glossario/"+k).set({testo:$("#g_"+k).value.trim(),aggiornato:Date.now()});toast("Definizione salvata")}catch(err){toast("Salvataggio non riuscito")}});
 
+document.querySelector("nav.tabs").addEventListener("click",e=>{const l=e.target.closest("a[data-v]");if(l&&location.hash.slice(1)===l.dataset.v){e.preventDefault();show(l.dataset.v)}});
 window.addEventListener("hashchange",()=>{const v=location.hash.slice(1);if(["ricerca","giornate","tagging","rete","partite","rose","glossario"].includes(v)||(v==="accessi"&&isAdmin))show(v)});
 show(["ricerca","giornate","tagging","rete","partite","rose","glossario"].includes(location.hash.slice(1))?location.hash.slice(1):"ricerca");
 

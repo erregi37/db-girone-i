@@ -13,5 +13,6 @@ Vale per persone, Claude, ChatGPT e qualsiasi altro assistente.
 ## Come funziona il codice
 - In fondo a `index.html`, `makeDb()` offre al resto della pagina un'interfaccia tipo Firestore (`db.collection(c).onSnapshot`, `db.doc("coll/id").set/update/delete/get/onSnapshot`) sopra la tabella `docs`, con aggiornamenti in tempo reale via Supabase Realtime.
 - Accesso: email e password (Supabase Auth). Permessi nella tabella `profili` (`attesa`, `lettore`, `editor`, `admin`), applicati dal database con RLS, non solo dall'interfaccia.
+- Ruolo e posizione: `ruolo` (POR, DC, TER, CEN, EST, TRQ, ATT) è la famiglia; `posizione` (es. TD, TS, QD, MEZ, CC, SP) è il posto preciso, scelto nella scheda o, se vuoto, quello con più minuti negli schieramenti (`posOf`). Mappa in `POSBYROLE`. Il quinto (QD/QS) è un'unica posizione, nella famiglia Esterni.
 - Rilevazione: ogni sessione è un documento `sessions/<id>` con il registro degli eventi (`log`); le statistiche si ricalcolano dal registro (`replay`, `computeSess`).
 - Librerie da CDN con versione fissa: SheetJS 0.18.5, supabase-js 2.118.0.
