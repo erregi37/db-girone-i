@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
+<script>try{const t=localStorage.getItem("og_theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t}catch(e){}</script>
 <title>Database Girone I</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=Saira:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -249,6 +250,7 @@ nav.tabs a[hidden]{display:none}
       <div class="row"><button type="button" id="waitRetry">Ricontrolla</button><button type="button" class="ghost" id="waitOut">Esci</button></div>
     </div>
     <p id="gateMsg" role="status"></p>
+    <button type="button" class="ghost small" data-theme-toggle></button>
   </div>
 </div>
 <div class="wrap" hidden>
@@ -266,7 +268,7 @@ nav.tabs a[hidden]{display:none}
         <div class="kpi"><span class="label">Giocatori analizzati</span><b id="kPlayers">0</b><span class="muted" style="font-size:.75rem" id="kPlayersSub"></span></div>
       </div>
       <span class="status" id="status">Connessione al database…</span>
-      <span class="status who"><span id="who"></span><button type="button" class="ghost small" id="logout">Esci</button></span>
+      <span class="status who"><span id="who"></span><button type="button" class="ghost small" data-theme-toggle></button><button type="button" class="ghost small" id="logout">Esci</button></span>
     </div>
   </header>
 
@@ -1507,6 +1509,14 @@ $("#glossList").addEventListener("click",async e=>{const k=e.target.dataset.gsav
 
 window.addEventListener("hashchange",()=>{const v=location.hash.slice(1);if(["ricerca","giornate","tagging","rete","partite","rose","glossario"].includes(v)||(v==="accessi"&&isAdmin))show(v)});
 show(["ricerca","giornate","tagging","rete","partite","rose","glossario"].includes(location.hash.slice(1))?location.hash.slice(1):"ricerca");
+
+/* ---------- tema chiaro / scuro ---------- */
+const isDark=()=>{const t=document.documentElement.dataset.theme;return t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches};
+function paintThemeBtns(){document.querySelectorAll("[data-theme-toggle]").forEach(b=>{b.textContent=isDark()?"☀ Tema chiaro":"☾ Tema scuro";b.setAttribute("aria-label",isDark()?"Passa al tema chiaro":"Passa al tema scuro")})}
+document.addEventListener("click",e=>{if(!e.target.closest("[data-theme-toggle]"))return;
+  const t=isDark()?"light":"dark";document.documentElement.dataset.theme=t;try{localStorage.setItem("og_theme",t)}catch(err){}paintThemeBtns()});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintThemeBtns);
+paintThemeBtns();
 
 /* ---------- accesso e database (Supabase) ---------- */
 const SB_URL="https://jivrnlvcfovistersklv.supabase.co";
