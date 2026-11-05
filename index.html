@@ -799,12 +799,25 @@ async function saveFile(filename,buf){
 }
 
 /* ---------- rose ---------- */
+let RSORT={k:"ruolo",dir:1};
+const RCOLS=[["num","N.","n"],["nome","Giocatore",""],["ruolo","Ruolo",""],["pos","Posizione",""],["anno","Anno","n"],["piede","Piede",""],["pres","Pres.","n"],["min","Min","n"],["gol","Gol","n"],["assist","Assist","n"]];
 function renderRoster(){
-  const t=$("#rTeam").value;const ps=Object.entries(S.players).filter(([,p])=>p.squadra===t||(p.ex||[]).includes(t))
-    .sort((x,y)=>ROLES.findIndex(r=>r[0]===x[1].ruolo)-ROLES.findIndex(r=>r[0]===y[1].ruolo)||norm(x[1].nome).localeCompare(norm(y[1].nome)));
+  const t=$("#rTeam").value;const ps=Object.entries(S.players).filter(([,p])=>p.squadra===t||(p.ex||[]).includes(t));
   $("#rCount").textContent=ps.length?`${ps.length} giocatori in rosa`:"";
   if(!ps.length){$("#roster").innerHTML=`<div class="panel empty"><h3>Rosa ${esc(t)} non ancora inserita</h3><p>Aggiungi i giocatori uno alla volta o incolla la rosa intera da Gestisci rosa. In alternativa la rosa si forma da sola caricando le partite.</p></div>`;return}
-  $("#roster").innerHTML=`<div class="tablebox"><table><thead><tr><th class="n">N.</th><th>Giocatore</th><th>Ruolo</th><th class="n">Anno</th><th>Piede</th><th class="n">Min</th></tr></thead><tbody>${ps.map(([pid,p])=>`<tr class="click" data-pid="${pid}" tabindex="0"><td class="n">${esc(numFor(p,t)??"")}</td><td class="pname">${esc(p.nome)}${p.squadra!==t?` <span class="chip">ora ${esc(p.squadra)}</span>`:""}</td><td>${esc(roleLabel(p.ruolo))}</td><td class="n">${esc(p.anno||"—")}</td><td>${esc(p.piede||"—")}</td><td class="n">${(AGG[pid]||{}).min||0}</td></tr>`).join("")}</tbody></table></div><p class="note">${ps.length} giocatori</p>`;
+  const ri=k=>{const x=ROLES.findIndex(r=>r[0]===k);return x<0?99:x};
+  const pord=Object.values(POSBYROLE).flat();
+  const key=([pid,p])=>{const a=AGG[pid]||{};switch(RSORT.k){
+    case"num":return numFor(p,t);case"nome":return norm(p.nome);case"ruolo":return ri(p.ruolo);
+    case"pos":{const k=posOf(pid);return k?pord.indexOf(k):null}case"anno":return +p.anno||null;case"piede":return p.piede||null;
+    case"pres":return a.pres||0;case"min":return a.min||0;case"gol":return (a.tot||{}).gol||0;case"assist":return (a.tot||{}).assist||0}};
+  ps.sort((x,y)=>{const a=key(x),b=key(y);let c=0;
+    if(a==null&&b!=null)return 1;if(b==null&&a!=null)return -1;
+    if(a!=null&&b!=null)c=typeof a==="string"?a.localeCompare(b):a-b;
+    return c*RSORT.dir||ri(x[1].ruolo)-ri(y[1].ruolo)||norm(x[1].nome).localeCompare(norm(y[1].nome))});
+  const head=RCOLS.map(([k,l,c])=>`<th class="sort ${c}" data-rs="${k}"${RSORT.k===k?` aria-sort="${RSORT.dir>0?"ascending":"descending"}"`:""}>${l}${RSORT.k===k?(RSORT.dir>0?" ↑":" ↓"):""}</th>`).join("");
+  $("#roster").innerHTML=`<div class="row" style="margin-bottom:8px;align-items:center"><label for="rSort" class="label" style="margin:0">Ordina per</label><select id="rSort" style="width:auto">${RCOLS.map(([k,l])=>`<option value="${k}"${k===RSORT.k?" selected":""}>${k==="num"?"Numero di maglia":l==="Pres."?"Presenze":l==="Min"?"Minuti giocati":l}</option>`).join("")}</select><button type="button" class="ghost small" id="rDir">${RSORT.dir>0?"↑ Crescente":"↓ Decrescente"}</button></div>
+  <div class="tablebox"><table><thead><tr>${head}</tr></thead><tbody>${ps.map(([pid,p])=>{const a=AGG[pid]||{};return `<tr class="click" data-pid="${pid}" tabindex="0"><td class="n">${esc(numFor(p,t)??"")}</td><td class="pname">${esc(p.nome)}${p.squadra!==t?` <span class="chip">ora ${esc(p.squadra)}</span>`:""}</td><td>${esc(roleLabel(p.ruolo))}</td><td>${esc(posName(posOf(pid))||"—")}</td><td class="n">${esc(p.anno||"—")}</td><td>${esc(p.piede||"—")}</td><td class="n">${a.pres||0}</td><td class="n">${a.min||0}</td><td class="n">${(a.tot||{}).gol||0}</td><td class="n">${(a.tot||{}).assist||0}</td></tr>`}).join("")}</tbody></table></div><p class="note">${ps.length} giocatori. Tocca l'intestazione di una colonna per ordinare; toccala di nuovo per invertire.</p>`;
 }
 async function teamReport(){
   const t=$("#rTeam").value;const B=bench(+$("#fMin").value||0);
@@ -1447,7 +1460,12 @@ $("#results").addEventListener("click",e=>{
   const th=e.target.closest("th[data-s]");if(th){const k=th.dataset.s;S.sort=S.sort&&S.sort.k===k?{k,dir:-S.sort.dir}:{k,dir:k==="nome"?1:-1};renderSearch();return}
   const tr=e.target.closest("tr[data-pid]");if(tr)openPlayer(tr.dataset.pid)});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("tr[data-pid]"))openPlayer(e.target.dataset.pid)});
-$("#roster").addEventListener("click",e=>{const tr=e.target.closest("tr[data-pid]");if(tr)openPlayer(tr.dataset.pid)});
+const RDESC=["pres","min","gol","assist"];
+$("#roster").addEventListener("click",e=>{
+  const th=e.target.closest("th[data-rs]");if(th){const k=th.dataset.rs;RSORT=RSORT.k===k?{k,dir:-RSORT.dir}:{k,dir:RDESC.includes(k)?-1:1};renderRoster();return}
+  if(e.target.id==="rDir"){RSORT.dir=-RSORT.dir;renderRoster();return}
+  const tr=e.target.closest("tr[data-pid]");if(tr)openPlayer(tr.dataset.pid)});
+$("#roster").addEventListener("change",e=>{if(e.target.id==="rSort"){const k=e.target.value;RSORT={k,dir:RDESC.includes(k)?-1:1};renderRoster()}});
 $("#backBtn").onclick=()=>go("ricerca");
 
 $("#profile").addEventListener("submit",async e=>{e.preventDefault();if(!db)return;
