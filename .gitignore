@@ -1,0 +1,4 @@
+backup*.json
+dati-iniziali*.json
+*.xlsx
+.DS_Store
