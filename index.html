@@ -159,7 +159,24 @@ img.badge{background:none;clip-path:none;object-fit:contain;text-shadow:none}
 .score{font-family:var(--f-display);font-weight:800;font-size:1.9rem;font-variant-numeric:tabular-nums;letter-spacing:.04em;text-align:center;min-width:86px}
 .score.tbd{font-size:1rem;color:var(--muted);font-weight:600}
 .fix .meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;border-top:1px dashed var(--line);padding-top:10px}
-.cov{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cov{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center}
+.covs{display:flex;flex-direction:column;gap:8px;flex:1 1 260px;align-items:stretch}
+.cov .covt{display:flex;align-items:center;gap:8px;flex:1 1 auto;min-width:0}
+.cov .covt .badge{width:28px;height:32px;font-size:.56rem;line-height:1;padding-bottom:5px;box-sizing:border-box}
+.cov .covt>span{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.cov .covt small{font-size:.76rem}
+.cov .chip{flex:0 0 auto}
+@media (max-width:560px){
+  .fix{padding:14px 12px;gap:8px}
+  .fix .tm,.fix .tm.away{flex-direction:column;text-align:center;gap:6px}
+  .fix .tm span{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.15;font-size:.95rem;overflow-wrap:anywhere}
+  .fix .score{font-size:1.6rem;min-width:64px}
+  .fix .meta{flex-direction:column;align-items:stretch}
+  .covs{flex:none}
+  .cov{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .cov>button{grid-column:1/-1;width:100%;padding:10px}
+  .cov .covt b{font-size:.92rem}
+}
 .chip.ok{border-color:var(--good);color:var(--good)}
 .chip.run{border-color:var(--warn);color:var(--warn)}
 .chip.no{border-color:var(--line);color:var(--muted)}
@@ -1326,13 +1343,13 @@ function renderGiornate(){
       :m.golCasa!=null?`<div class="score">${m.golCasa}–${m.golTrasf}</div>`:`<div class="score tbd">da giocare</div>`;
     const sides=CALAB.filter(t=>t===m.casa||t===m.trasferta).map(t=>{const c=coverage(m,t);
       const btn=c.k==="ok"?(c.id?`<button type="button" class="ghost small" data-gopen="${esc(c.id)}">Registro</button>`:""):c.k==="run"?`<button type="button" class="small" data-gopen="${esc(c.id)}">Riprendi</button>`:(canWrite?`<button type="button" class="small" data-gnew="${esc(id)}" data-team="${esc(t)}">Analizza ora</button>`:"");
-      const co=coachAt(t,m.giornata);return `<span class="cov">${badge(t)}<span class="chip ${c.k}">${c.l}</span>${co?`<span class="muted" style="font-size:.78rem">All. ${esc(co)}</span>`:""}${btn}</span>`}).join("");
+      const co=coachAt(t,m.giornata);return `<div class="cov"><span class="covt">${badge(t)}<span><b>${esc(t)}</b>${co?`<small class="muted">All. ${esc(co)}</small>`:""}</span></span><span class="chip ${c.k}">${c.l}</span>${btn}</div>`}).join("");
     return `<article class="fix" data-mid="${esc(id)}">
       <div class="tm${CALAB.includes(m.casa)?" cal":""}">${badge(m.casa,1)}<span>${esc(m.casa)}</span></div>
       ${sc}
       <div class="tm away${CALAB.includes(m.trasferta)?" cal":""}">${badge(m.trasferta,1)}<span>${esc(m.trasferta)}</span></div>
       ${scorersHTML(m)}
-      <div class="meta"><span class="muted mono">${esc(fmtDate(m.data))}</span><span class="row" style="gap:10px">${sides}</span>
+      <div class="meta"><span class="muted mono">${esc(fmtDate(m.data))}</span><div class="covs">${sides}</div>
 </div>
     </article>`}).join("");
 }
