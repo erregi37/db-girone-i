@@ -518,11 +518,8 @@ nav.tabs a[hidden]{display:none}
       <div class="rhead">
         <div class="row" style="gap:14px;align-items:center;flex-wrap:nowrap;min-width:0"><span id="crestPrev"></span><div class="stack" style="gap:2px;min-width:0"><h2 id="rTitle"></h2><span class="muted" id="rCount"></span></div></div>
         <div class="row" style="gap:8px">
-          <button type="button" class="ghost small" id="crestBtn">Carica stemma</button>
-          <button type="button" class="ghost small" id="crestDel" hidden>Togli stemma</button>
           <button type="button" class="ghost small" id="teamReport">Report Excel</button>
         </div>
-        <input id="crestFile" class="vh" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml">
       </div>
       <div id="roster"></div>
       <div class="panel stack" style="gap:10px">
@@ -1455,23 +1452,9 @@ $("#coachList").addEventListener("click",async e=>{const w=e.target.closest("[da
   if(e.target.matches("[data-cdel]"))w.innerHTML=`<button type="button" class="danger small" data-cy>Conferma</button> <button type="button" class="ghost small" data-cn>No</button>`;
   else if(e.target.matches("[data-cn]"))renderCoaches();
   else if(e.target.matches("[data-cy]")){try{await db.doc("allenatori/"+w.dataset.cw).delete();toast("Allenatore eliminato")}catch(err){toast("Eliminazione non riuscita")}}});
-function renderCrest(){renderCoaches();const t=$("#rTeam").value,cr=CREST[norm(t)];$("#crestPrev").innerHTML=badge(t,1);$("#crestDel").hidden=!(cr&&(cr.id||cr.url));$("#rTitle").textContent=t;
+function renderCrest(){renderCoaches();const t=$("#rTeam").value,cr=CREST[norm(t)];$("#crestPrev").innerHTML=badge(t,1);$("#rTitle").textContent=t;
   $("#rTabs").innerHTML=CALAB.map(x=>`<button type="button" role="tab" data-team="${esc(x)}" aria-selected="${x===t}">${badge(x)}${esc(x)}</button>`).join("")}
 $("#rTabs").addEventListener("click",e=>{const b=e.target.closest("[data-team]");if(!b)return;$("#rTeam").value=b.dataset.team;try{localStorage.setItem("og_team",b.dataset.team)}catch(err){}renderRoster();renderCrest()});
-$("#crestBtn").onclick=()=>{if(!canWrite){toast("Solo chi può modificare può caricare gli stemmi");return}$("#crestFile").click()};
-async function crestData(f){
-  const u=URL.createObjectURL(f);
-  try{const img=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>ko(new Error("immagine non leggibile"));i.src=u});
-    const W=img.naturalWidth||192,H=img.naturalHeight||192,k=Math.min(1,192/Math.max(W,H));
-    const w=Math.max(1,Math.round(W*k)),h=Math.max(1,Math.round(H*k));
-    const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);return c.toDataURL("image/png")}
-  finally{URL.revokeObjectURL(u)}}
-$("#crestFile").addEventListener("change",async e=>{const f=e.target.files[0];if(!f||!db)return;
-  if(f.size>2*1024*1024){toast("Immagine troppo grande: massimo 2 MB");e.target.value="";return}
-  const t=$("#rTeam").value;toast("Carico lo stemma…");
-  try{const url=await crestData(f);await db.doc("stemmi/"+norm(t)).set({squadra:t,url});toast("Stemma salvato")}
-  catch(err){toast("Caricamento non riuscito: prova un PNG o JPG")}e.target.value=""});
-$("#crestDel").onclick=async()=>{const t=$("#rTeam").value;try{await db.doc("stemmi/"+norm(t)).delete();toast("Stemma tolto")}catch(err){toast("Operazione non riuscita")}};
 
 /* ================= RETE DI PASSAGGI ================= */
 const NET={team:"",sel:null,cache:{},loading:false};
@@ -1844,7 +1827,7 @@ function startApp(){
   $("#who").textContent=PROFILO.email+" · "+({lettore:"lettore",editor:"editor",admin:"admin"})[PROFILO.ruolo];
   $("#tabAccessi").hidden=!isAdmin;
   if(isAdmin)renderAccessi();
-  if(!canWrite){document.querySelectorAll("#addPlayer button,#addPlayer input,#rFile,#crestBtn").forEach(x=>x.disabled=true);$("#newSess").hidden=true}
+  if(!canWrite){document.querySelectorAll("#addPlayer button,#addPlayer input,#rFile").forEach(x=>x.disabled=true);$("#newSess").hidden=true}
   db=makeDb(sb);
   let pending=3;const timer=setTimeout(()=>{$("#status").textContent="Il database non risponde ancora: i dati potrebbero non essere aggiornati.";$("#status").classList.add("err")},10000);
   const done=snap=>{if(--pending<=0){clearTimeout(timer);$("#status").classList.remove("err");$("#status").textContent=canWrite?"Dati condivisi, aggiornati in tempo reale":"Sola lettura"}};
