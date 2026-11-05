@@ -72,6 +72,8 @@ nav.tabs a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .stack{display:flex;flex-direction:column;gap:12px}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
 .field[hidden]{display:none!important}
+.agrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.agrid .field{min-width:0}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 120px}
 .field label{font-size:.8rem;font-weight:600;color:var(--muted)}
 input,select,textarea{box-sizing:border-box;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:7px 9px;min-width:0;width:100%}
@@ -652,8 +654,9 @@ const POSBYROLE={POR:["POR"],DC:["DC","BR"],TER:["TD","TS"],CEN:["REG","MED","ME
 const posName=k=>({POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Regista",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"})[k]||k||"";
 /* posizione principale: quella scelta nella scheda, altrimenti quella con più minuti negli schieramenti */
 function posOf(pid){const p=S.players[pid]||{};return p.posizione||topPos(pid)}
-function posOpts(r,cur){return `<option value="">Automatica (dagli schieramenti)</option>`+(POSBYROLE[r]||[]).map(k=>`<option value="${k}"${k===cur?" selected":""}>${esc(posName(k))}</option>`).join("")}
-function topPos(pid){const a=AGG[pid];if(!a||!a.posMin)return null;const e=Object.entries(a.posMin).sort((x,y)=>y[1]-x[1]);return e.length&&e[0][1]>0?e[0][0]:null}
+function posOpts(r,cur){return `<option value="">Automatica</option>`+(POSBYROLE[r]||[]).map(k=>`<option value="${k}"${k===cur?" selected":""}>${esc(posName(k))}</option>`).join("")}
+/* posizione in cui è stato schierato più volte; a parità, quella con più minuti */
+function topPos(pid){const a=AGG[pid];if(!a)return null;const ap=a.posApp||{},mn=a.posMin||{};const ks=[...new Set([...Object.keys(ap),...Object.keys(mn)])].filter(k=>(ap[k]||0)>0||(mn[k]||0)>0);if(!ks.length)return null;ks.sort((x,y)=>(ap[y]||0)-(ap[x]||0)||(mn[y]||0)-(mn[x]||0));return ks[0]}
 function roleOf(pid){const p=S.players[pid]||{};const gen=GENERIC.includes(String(p.ruolo_dettaglio||"").trim().toLowerCase())||!p.ruolo;const tp=topPos(pid);return gen&&tp?POS2ROLE[tp]||p.ruolo:p.ruolo}
 const roleLabel=k=>(ROLES.find(r=>r[0]===k)||[k,k||"—"])[1];
 const fmt=(v,d=2)=>v==null||isNaN(v)?"—":v.toLocaleString("it-IT",{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -673,9 +676,18 @@ function aggregate(){
     const a=AGG[pid]||(AGG[pid]={min:0,pres:0,sub:0,tot:{},log:[]});
     const min=+r.min||0;a.min+=min;if(min>0){a.pres++;if(r.tit===false)a.sub++}
     for(const x of M)a.tot[x.k]=(a.tot[x.k]||0)+(+r[x.k]||0);
-    a.posMin=a.posMin||{};for(const [k,v] of Object.entries(r.pos||{})){const pc=k.split("@")[0];a.posMin[pc]=(a.posMin[pc]||0)+(+v.min||0)}
+    a.posMin=a.posMin||{};const pm={};for(const [k,v] of Object.entries(r.pos||{})){const pc=k.split("@")[0];a.posMin[pc]=(a.posMin[pc]||0)+(+v.min||0);pm[pc]=(pm[pc]||0)+(+v.min||0)}
+    const tp=Object.entries(pm).sort((x,y)=>y[1]-x[1])[0];if(tp&&tp[1]>0){a.posApp=a.posApp||{};a.posApp[tp[0]]=(a.posApp[tp[0]]||0)+1}
     a.log.push({m,r});
   }}
+  /* partite schierate ma non ancora inviate: contano la presenza (e il subentro) e la posizione */
+  for(const x of Object.values(SESS)){if(!x||!x.pres)continue;
+    const m=S.matches[matchId(x.giornata,x.casa,x.trasferta)];
+    if(m&&Object.values(m.righe||{}).some(r=>r.squadra===x.squadra))continue;
+    for(const [pid,r] of Object.entries(x.pres)){
+      const a=AGG[pid]||(AGG[pid]={min:0,pres:0,sub:0,tot:{},log:[]});
+      a.pres++;if(!r.tit)a.sub++;
+      if(r.pos){a.posApp=a.posApp||{};a.posApp[r.pos]=(a.posApp[r.pos]||0)+1}}}
 }
 function val(a,ind){if(!a)return null;
   if(ind.type==="p90")return a.min>0?a.tot[ind.k]/a.min*90:null;
@@ -774,7 +786,7 @@ function renderProfile(){
       <div class="facts">
         <div><span class="label">Anno</span><b>${esc(p.anno||"—")}</b></div>
         <div><span class="label">Piede</span><b>${esc(p.piede||"—")}</b></div>
-        <div><span class="label">Presenze (da subentrato)</span><b>${a.pres}${a.sub?` <span class="muted" style="font-size:.7em">(${a.sub})</span>`:""}</b></div>
+        <div><span class="label" title="Presenze totali; tra parentesi quante da subentrato. Contano dallo schieramento iniziale e dai cambi, anche prima di inviare la partita.">Presenze (da subentrato)</span><b>${a.pres}${a.sub?` <span class="muted" style="font-size:.7em">(${a.sub})</span>`:""}</b></div>
         <div><span class="label">Minuti</span><b>${a.min}</b></div>
         <div><span class="label">Gol</span><b>${a.tot.gol||0}</b></div>
         <div><span class="label">xG</span><b>${fmt(a.tot.xg||0)}</b></div>
@@ -796,17 +808,15 @@ function renderProfile(){
       <div class="row">${qsel}</div>
       <div class="field"><label for="pNote">Note</label><textarea id="pNote" ${canWrite?"":"disabled"}>${esc(p.note||"")}</textarea></div>
       <h3>Anagrafica</h3>
-      <div class="field"><label for="eName">Nome e cognome</label><input id="eName" value="${esc(p.nome||"")}" autocomplete="off" ${canWrite?"":"disabled"}></div>
-      <div class="row">
-        <div class="field"><label for="eRole">Ruolo</label><select id="eRole" ${canWrite?"":"disabled"}>${ROLES.map(r=>`<option value="${r[0]}"${r[0]===p.ruolo?" selected":""}>${r[1]}</option>`).join("")}</select></div>
-        <div class="field"><label for="ePos">Posizione</label><select id="ePos" ${canWrite?"":"disabled"}>${posOpts(p.ruolo,p.posizione)}</select></div>
-        <div class="field" style="flex:0 0 100px"><label for="eYear">Anno</label><input id="eYear" type="number" value="${esc(p.anno||"")}" ${canWrite?"":"disabled"}></div>
-      </div>
-      <div class="row">
-        <div class="field"><label for="eFoot">Piede</label><select id="eFoot" ${canWrite?"":"disabled"}>${["","Destro","Sinistro","Ambidestro"].map(f=>`<option${f===(p.piede||"")?" selected":""}>${f}</option>`).join("")}</select></div>
-        <div class="field"><label for="eTeam">Squadra</label><select id="eTeam" ${canWrite?"":"disabled"}>${TEAMS.map(t=>`<option${t===p.squadra?" selected":""}>${t}</option>`).join("")}<option value="__altro"${p.squadra&&!TEAMS.includes(p.squadra)?" selected":""}>Fuori dal girone / svincolato…</option></select></div>
-        <div class="field" id="eOtherWrap" ${p.squadra&&!TEAMS.includes(p.squadra)?"":"hidden"}><label for="eOther">Nuova squadra</label><input id="eOther" placeholder="es. Cosenza, svincolato" value="${esc(p.squadra&&!TEAMS.includes(p.squadra)?p.squadra:"")}" ${canWrite?"":"disabled"}></div>
-        <div class="field" style="flex:0 1 200px"><label for="eNum">Numero alla ${esc(p.squadra)}</label><input id="eNum" type="number" inputmode="numeric" min="1" max="99" value="${esc(numFor(p,p.squadra)??"")}" ${canWrite?"":"disabled"}></div>
+      <div class="agrid">
+        <div class="field" style="grid-column:span 4"><label for="eName">Nome e cognome</label><input id="eName" value="${esc(p.nome||"")}" autocomplete="off" ${canWrite?"":"disabled"}></div>
+        <div class="field" style="grid-column:span 2"><label for="eYear">Anno</label><input id="eYear" type="number" value="${esc(p.anno||"")}" ${canWrite?"":"disabled"}></div>
+        <div class="field" style="grid-column:span 3"><label for="eRole">Ruolo</label><select id="eRole" ${canWrite?"":"disabled"}>${ROLES.map(r=>`<option value="${r[0]}"${r[0]===p.ruolo?" selected":""}>${r[1]}</option>`).join("")}</select></div>
+        <div class="field" style="grid-column:span 3"><label for="ePos">Posizione</label><select id="ePos" ${canWrite?"":"disabled"}>${posOpts(p.ruolo,p.posizione)}</select></div>
+        <div class="field" style="grid-column:span 4"><label for="eTeam">Squadra</label><select id="eTeam" ${canWrite?"":"disabled"}>${TEAMS.map(t=>`<option${t===p.squadra?" selected":""}>${t}</option>`).join("")}<option value="__altro"${p.squadra&&!TEAMS.includes(p.squadra)?" selected":""}>Fuori dal girone / svincolato…</option></select></div>
+        <div class="field" style="grid-column:span 2"><label for="eNum" title="Numero alla ${esc(p.squadra)}">Numero</label><input id="eNum" type="number" inputmode="numeric" min="1" max="99" value="${esc(numFor(p,p.squadra)??"")}" ${canWrite?"":"disabled"}></div>
+        <div class="field" style="grid-column:span 6" id="eOtherWrap" ${p.squadra&&!TEAMS.includes(p.squadra)?"":"hidden"}><label for="eOther">Nuova squadra</label><input id="eOther" placeholder="es. Cosenza, svincolato" value="${esc(p.squadra&&!TEAMS.includes(p.squadra)?p.squadra:"")}" ${canWrite?"":"disabled"}></div>
+        <div class="field" style="grid-column:span 3"><label for="eFoot">Piede</label><select id="eFoot" ${canWrite?"":"disabled"}>${["","Destro","Sinistro","Ambidestro"].map(f=>`<option${f===(p.piede||"")?" selected":""}>${f}</option>`).join("")}</select></div>
       </div>
       ${(p.ex||[]).length?`<div class="row">${p.ex.map((t,k)=>`<div class="field" style="flex:0 1 200px"><label for="exn${k}">Numero alla ${esc(t)}</label><input id="exn${k}" data-exnum="${esc(t)}" type="number" inputmode="numeric" min="1" max="99" value="${esc(numFor(p,t)??"")}" ${canWrite?"":"disabled"}></div>`).join("")}</div><p class="note" style="margin:0">Il numero di maglia vale per squadra: quello sopra è per la ${esc(p.squadra)}, questi per le squadre in cui ha giocato prima. Nelle partite vecchie si usa il numero della squadra di allora.</p>`:""}
       ${canWrite?`<div class="row" style="justify-content:space-between"><button type="submit">Salva scheda</button><span id="delWrap"><button type="button" class="danger small" id="delP">Elimina giocatore</button></span></div>`:""}
@@ -912,10 +922,10 @@ function renderRoster(){
     return c*RSORT.dir||ri(x[1].ruolo)-ri(y[1].ruolo)||norm(x[1].nome).localeCompare(norm(y[1].nome))});
   const CW={num:"w-num c",nome:"",ruolo:"w-role",pos:"w-pos",anno:"w-yr c",piede:"w-ft",pres:"w-pr c sep",min:"w-st c",gol:"w-st c",assist:"w-st c"};
   const cols=RCOLS.map(([k])=>`<col class="${CW[k].split(" ")[0]}">`).join("");
-  const head=RCOLS.map(([k,l])=>`<th class="sort ${CW[k].split(" ").slice(1).join(" ")}" data-rs="${k}"${RSORT.k===k?` aria-sort="${RSORT.dir>0?"ascending":"descending"}"`:""}>${l}${RSORT.k===k?(RSORT.dir>0?" ↑":" ↓"):""}</th>`).join("");
+  const head=RCOLS.map(([k,l])=>`<th class="sort ${CW[k].split(" ").slice(1).join(" ")}" data-rs="${k}"${k==="pres"?` title="Presenze totali; tra parentesi quante da subentrato. Contano dallo schieramento iniziale e dai cambi, anche prima di inviare la partita."`:""}${RSORT.k===k?` aria-sort="${RSORT.dir>0?"ascending":"descending"}"`:""}>${l}${RSORT.k===k?(RSORT.dir>0?" ↑":" ↓"):""}</th>`).join("");
   const mlist=`<div class="mlist">${ps.map(([pid,p])=>{const a=AGG[pid]||{},nu=numFor(p,t),gone=p.squadra!==t;
     const info=[roleLabel(p.ruolo),posName(posOf(pid)),p.anno,p.piede].filter(Boolean).join(" · ");
-    return `<button type="button" class="mitem${gone?" gone":""}" data-pid="${pid}"><span class="shirt">${nu!=null?esc(nu):"–"}</span><span class="mi-main"><b>${esc(p.nome)}</b><small>${esc(info)}</small>${gone?`<small>ceduto · ora ${esc(p.squadra)}</small>`:""}</span><span class="mi-st"><span class="${a.pres?"":"z"}"><b>${a.pres||0}${a.sub?`<small style="display:inline;font-size:.7rem"> (${a.sub})</small>`:""}</b><small>Pres.</small></span><span class="${a.min?"":"z"}"><b>${a.min||0}</b><small>Min</small></span></span></button>`}).join("")}</div>`;
+    return `<button type="button" class="mitem${gone?" gone":""}" data-pid="${pid}"><span class="shirt">${nu!=null?esc(nu):"–"}</span><span class="mi-main"><b>${esc(p.nome)}</b><small>${esc(info)}</small>${gone?`<small>ceduto · ora ${esc(p.squadra)}</small>`:""}</span><span class="mi-st"><span class="${a.pres?"":"z"}"><b>${a.pres||0}${a.sub?`<small style="display:inline;font-size:.7rem"> (${a.sub})</small>`:""}</b><small title="Presenze totali; tra parentesi quante da subentrato. Contano dallo schieramento iniziale e dai cambi, anche prima di inviare la partita.">Pres.</small></span><span class="${a.min?"":"z"}"><b>${a.min||0}</b><small>Min</small></span></span></button>`}).join("")}</div>`;
   $("#roster").innerHTML=`<div class="row" style="margin-bottom:8px;align-items:center"><label for="rSort" class="label" style="margin:0">Ordina per</label><select id="rSort" style="width:auto">${RCOLS.map(([k,l])=>`<option value="${k}"${k===RSORT.k?" selected":""}>${k==="num"?"Numero di maglia":l==="Pres."?"Presenze":l==="Min"?"Minuti giocati":l}</option>`).join("")}</select><button type="button" class="ghost small" id="rDir">${RSORT.dir>0?"↑ Crescente":"↓ Decrescente"}</button></div>
   ${mlist}<div class="tablebox hide-m"><table class="rt"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${ps.map(([pid,p])=>{const a=AGG[pid]||{},tt=a.tot||{};const st=(v,x)=>`<td class="c st${v?"":" z"}${x?" "+x:""}">${v||0}</td>`;const nu=numFor(p,t);
     return `<tr class="click${p.squadra!==t?" gone":""}" data-pid="${pid}" tabindex="0"><td class="c">${nu!=null?`<span class="shirt">${esc(nu)}</span>`:""}</td><td class="pname">${esc(p.nome)}${p.squadra!==t?` <span class="chip">ceduto · ora ${esc(p.squadra)}</span>`:""}</td><td class="sec">${esc(roleLabel(p.ruolo))}</td><td class="sec">${esc(posName(posOf(pid))||"—")}</td><td class="c sec">${esc(p.anno||"—")}</td><td class="sec">${esc(p.piede||"—")}</td><td class="c st sep${a.pres?"":" z"}">${a.pres||0}${a.sub?` <span class="muted" style="font-weight:500">(${a.sub})</span>`:""}</td>${st(a.min)}${st(tt.gol)}${st(tt.assist)}</tr>`}).join("")}</tbody></table></div><p class="note">${ps.length} giocatori. Presenze totali, tra parentesi quelle da subentrato. Tocca l'intestazione di una colonna per ordinare; toccala di nuovo per invertire.</p>`;
@@ -1054,7 +1064,11 @@ async function flush(){
   catch(e){T.dirty=true;setSave(e&&e.code==="quota_exceeded"?"Database pieno":"Non salvato, riprovo",true);T.saving=false;clearTimeout(T.ft);T.ft=setTimeout(flush,2500);return}
   T.saving=false;if(T.dirty){clearTimeout(T.ft);T.ft=setTimeout(flush,150)}
 }
-async function writeIdx(s){try{await db.doc("sessidx/"+T.sid).set({giornata:+s.giornata,data:s.data||"",casa:s.casa,trasferta:s.trasferta,squadra:s.squadra,stato:s.stato,n:s.log.length,aggiornato:Date.now()})}catch(e){}}
+/* presenze dallo schieramento: chi parte titolare e chi entra, con la posizione in cui ha giocato di più */
+function presFrom(s){const out={};try{const R=computeSess(s);for(const [pid,r] of Object.entries(R)){if(!r.tit&&r.in==null)continue;
+  const pm={};for(const [k,v] of Object.entries(r.pos||{})){const pc=k.split("@")[0];pm[pc]=(pm[pc]||0)+(+v.min||0)}
+  const top=Object.entries(pm).sort((a,b)=>b[1]-a[1])[0];out[pid]={tit:!!r.tit,pos:top?top[0]:null}}}catch(e){}return out}
+async function writeIdx(s){try{await db.doc("sessidx/"+T.sid).set({giornata:+s.giornata,data:s.data||"",casa:s.casa,trasferta:s.trasferta,squadra:s.squadra,stato:s.stato,n:s.log.length,pres:presFrom(s),aggiornato:Date.now()})}catch(e){}}
 
 /* --- elenco sessioni --- */
 function renderSessList(){
@@ -1841,7 +1855,7 @@ function startApp(){
   const busy=sel=>{const a=document.activeElement;return !!(a&&a.closest&&a.closest(sel))};
   db.collection("players").onSnapshot(s=>{S.players={};s.docs.forEach(d=>S.players[d.id]=d.data());aggregate();if(!busy("#profForm"))render();done(s)},fail);
   db.collection("matches").onSnapshot(s=>{S.matches={};s.docs.forEach(d=>S.matches[d.id]=d.data());aggregate();if(!busy("#profForm"))render();done(s)},fail);
-  db.collection("sessidx").onSnapshot(s=>{SESS={};s.docs.forEach(d=>SESS[d.id]=d.data());render()},()=>{});
+  db.collection("sessidx").onSnapshot(s=>{SESS={};s.docs.forEach(d=>SESS[d.id]=d.data());aggregate();render()},()=>{});
   db.collection("allenatori").onSnapshot(s=>{COACH={};s.docs.forEach(d=>COACH[d.id]=d.data());render()},()=>{});
   db.collection("stemmi").onSnapshot(s=>{CREST={};s.docs.forEach(d=>CREST[d.id]=d.data());render()},()=>{});
   db.collection("calendario").onSnapshot(s=>{CAL={};s.docs.forEach(d=>CAL[d.id]=d.data());render()},()=>{});
