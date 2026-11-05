@@ -80,14 +80,28 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 .tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
 table{border-collapse:collapse;width:100%;font-size:.9rem}
-th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th,td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 th{font-family:var(--f-display);font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);background:var(--surface);position:sticky;top:0;border-bottom:1px solid var(--accent)}
 th.sort{cursor:pointer}
 th.sort[aria-sort] {color:var(--ink)}
 td.n,th.n{text-align:right}
 tbody tr:hover{background:var(--soft)}
 tr.click{cursor:pointer}
+tbody tr.click:hover{background:var(--soft)}
+tbody tr.click:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .pname{font-weight:600}
+table.rt{table-layout:fixed;min-width:860px}
+table.rt th,table.rt td{padding:10px 8px}
+table.rt th.c,table.rt td.c{text-align:center}
+table.rt col.w-num{width:56px}table.rt col.w-role{width:150px}table.rt col.w-pos{width:170px}table.rt col.w-yr{width:70px}table.rt col.w-ft{width:96px}table.rt col.w-st{width:76px}table.rt col.w-pr{width:96px}
+table.rt td.pname{overflow:hidden;text-overflow:ellipsis}
+table.rt td.sec{color:var(--muted)}
+table.rt .sep{border-left:1px solid var(--line)}
+table.rt tbody tr:nth-child(even){background:color-mix(in srgb,var(--soft) 45%,transparent)}
+table.rt tbody tr.click:hover{background:var(--soft)}
+table.rt .shirt{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:26px;padding:0 4px;border-radius:5px;background:var(--soft);color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+table.rt td.z{color:var(--muted);opacity:.55}
+table.rt td.st{font-variant-numeric:tabular-nums;font-weight:600}
 .delta{font-size:.75rem;margin-left:4px}
 .up{color:var(--good)} .down{color:var(--bad)}
 .chip{display:inline-block;font-size:.72rem;font-weight:600;padding:1px 7px;border-radius:99px;border:1px solid var(--line);color:var(--muted)}
@@ -800,7 +814,7 @@ async function saveFile(filename,buf){
 
 /* ---------- rose ---------- */
 let RSORT={k:"ruolo",dir:1};
-const RCOLS=[["num","N.","n"],["nome","Giocatore",""],["ruolo","Ruolo",""],["pos","Posizione",""],["anno","Anno","n"],["piede","Piede",""],["pres","Pres. (sub.)","n"],["min","Min","n"],["gol","Gol","n"],["assist","Assist","n"]];
+const RCOLS=[["num","N.","n"],["nome","Giocatore",""],["ruolo","Ruolo",""],["pos","Posizione",""],["anno","Anno","n"],["piede","Piede",""],["pres","Pres.","n"],["min","Min","n"],["gol","Gol","n"],["assist","Assist","n"]];
 function renderRoster(){
   const t=$("#rTeam").value;const ps=Object.entries(S.players).filter(([,p])=>p.squadra===t||(p.ex||[]).includes(t));
   $("#rCount").textContent=ps.length?`${ps.length} giocatori in rosa`:"";
@@ -815,9 +829,12 @@ function renderRoster(){
     if(a==null&&b!=null)return 1;if(b==null&&a!=null)return -1;
     if(a!=null&&b!=null)c=typeof a==="string"?a.localeCompare(b):a-b;
     return c*RSORT.dir||ri(x[1].ruolo)-ri(y[1].ruolo)||norm(x[1].nome).localeCompare(norm(y[1].nome))});
-  const head=RCOLS.map(([k,l,c])=>`<th class="sort ${c}" data-rs="${k}"${RSORT.k===k?` aria-sort="${RSORT.dir>0?"ascending":"descending"}"`:""}>${l}${RSORT.k===k?(RSORT.dir>0?" ↑":" ↓"):""}</th>`).join("");
-  $("#roster").innerHTML=`<div class="row" style="margin-bottom:8px;align-items:center"><label for="rSort" class="label" style="margin:0">Ordina per</label><select id="rSort" style="width:auto">${RCOLS.map(([k,l])=>`<option value="${k}"${k===RSORT.k?" selected":""}>${k==="num"?"Numero di maglia":l==="Pres. (sub.)"?"Presenze":l==="Min"?"Minuti giocati":l}</option>`).join("")}</select><button type="button" class="ghost small" id="rDir">${RSORT.dir>0?"↑ Crescente":"↓ Decrescente"}</button></div>
-  <div class="tablebox"><table><thead><tr>${head}</tr></thead><tbody>${ps.map(([pid,p])=>{const a=AGG[pid]||{};return `<tr class="click" data-pid="${pid}" tabindex="0"><td class="n">${esc(numFor(p,t)??"")}</td><td class="pname">${esc(p.nome)}${p.squadra!==t?` <span class="chip">ora ${esc(p.squadra)}</span>`:""}</td><td>${esc(roleLabel(p.ruolo))}</td><td>${esc(posName(posOf(pid))||"—")}</td><td class="n">${esc(p.anno||"—")}</td><td>${esc(p.piede||"—")}</td><td class="n">${a.pres||0}${a.sub?` <span class="muted">(${a.sub})</span>`:""}</td><td class="n">${a.min||0}</td><td class="n">${(a.tot||{}).gol||0}</td><td class="n">${(a.tot||{}).assist||0}</td></tr>`}).join("")}</tbody></table></div><p class="note">${ps.length} giocatori. Presenze totali, tra parentesi quelle da subentrato. Tocca l'intestazione di una colonna per ordinare; toccala di nuovo per invertire.</p>`;
+  const CW={num:"w-num c",nome:"",ruolo:"w-role",pos:"w-pos",anno:"w-yr c",piede:"w-ft",pres:"w-pr c sep",min:"w-st c",gol:"w-st c",assist:"w-st c"};
+  const cols=RCOLS.map(([k])=>`<col class="${CW[k].split(" ")[0]}">`).join("");
+  const head=RCOLS.map(([k,l])=>`<th class="sort ${CW[k].split(" ").slice(1).join(" ")}" data-rs="${k}"${RSORT.k===k?` aria-sort="${RSORT.dir>0?"ascending":"descending"}"`:""}>${l}${RSORT.k===k?(RSORT.dir>0?" ↑":" ↓"):""}</th>`).join("");
+  $("#roster").innerHTML=`<div class="row" style="margin-bottom:8px;align-items:center"><label for="rSort" class="label" style="margin:0">Ordina per</label><select id="rSort" style="width:auto">${RCOLS.map(([k,l])=>`<option value="${k}"${k===RSORT.k?" selected":""}>${k==="num"?"Numero di maglia":l==="Pres."?"Presenze":l==="Min"?"Minuti giocati":l}</option>`).join("")}</select><button type="button" class="ghost small" id="rDir">${RSORT.dir>0?"↑ Crescente":"↓ Decrescente"}</button></div>
+  <div class="tablebox"><table class="rt"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${ps.map(([pid,p])=>{const a=AGG[pid]||{},tt=a.tot||{};const st=(v,x)=>`<td class="c st${v?"":" z"}${x?" "+x:""}">${v||0}</td>`;const nu=numFor(p,t);
+    return `<tr class="click" data-pid="${pid}" tabindex="0"><td class="c">${nu!=null?`<span class="shirt">${esc(nu)}</span>`:""}</td><td class="pname">${esc(p.nome)}${p.squadra!==t?` <span class="chip">ora ${esc(p.squadra)}</span>`:""}</td><td class="sec">${esc(roleLabel(p.ruolo))}</td><td class="sec">${esc(posName(posOf(pid))||"—")}</td><td class="c sec">${esc(p.anno||"—")}</td><td class="sec">${esc(p.piede||"—")}</td><td class="c st sep${a.pres?"":" z"}">${a.pres||0}${a.sub?` <span class="muted" style="font-weight:500">(${a.sub})</span>`:""}</td>${st(a.min)}${st(tt.gol)}${st(tt.assist)}</tr>`}).join("")}</tbody></table></div><p class="note">${ps.length} giocatori. Presenze totali, tra parentesi quelle da subentrato. Tocca l'intestazione di una colonna per ordinare; toccala di nuovo per invertire.</p>`;
 }
 async function teamReport(){
   const t=$("#rTeam").value;const B=bench(+$("#fMin").value||0);
