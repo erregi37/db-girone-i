@@ -156,6 +156,14 @@ img.badge{background:none;clip-path:none;object-fit:contain;text-shadow:none}
 body.tagopen{overflow:hidden}
 #tagger{position:fixed;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
 #tagger[hidden]{display:none!important}
+.rotate{display:none}
+@media (orientation:portrait) and (max-width:600px){
+  #tagger .rotate{display:flex;position:absolute;inset:0;z-index:40;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;background:var(--bg)}
+  #tagger .rotate .ph{width:46px;height:78px;border:3px solid var(--accent);border-radius:9px;animation:ruota 1.8s ease-in-out infinite}
+  #tagger .rotate b{font-family:var(--f-display);font-size:1.5rem;letter-spacing:.04em;text-transform:uppercase}
+}
+@keyframes ruota{0%,25%{transform:rotate(0)}55%,100%{transform:rotate(-90deg)}}
+@media (prefers-reduced-motion:reduce){#tagger .rotate .ph{animation:none;transform:rotate(-90deg)}}
 .tbar{display:flex;align-items:center;gap:8px;padding:5px 10px;border-bottom:1px solid var(--line);min-height:46px}
 .tbar .tt{font-family:var(--f-display);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:28%}
 .tlast{flex:1;min-width:0;font-family:var(--f-mono);font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
@@ -204,6 +212,8 @@ body.tagopen{overflow:hidden}
 .plist button b{font-family:var(--f-display);font-size:1.1rem;min-width:28px}
 .plist button.bench{border-color:var(--accent)}
 .hint{position:absolute;left:50%;transform:translateX(-50%);top:calc(54px + env(safe-area-inset-top,0px));background:var(--ink);color:var(--bg);padding:7px 12px;border-radius:5px;font-weight:600;z-index:35;display:flex;gap:8px;align-items:center;max-width:94%}
+.hint[hidden]{display:none}
+@media (max-height:450px){.tbar{min-height:38px;padding:2px 10px}.tbar button.small{padding:2px 8px}.tmain{padding:6px 8px;gap:8px}}
 .hint button{padding:4px 10px;font-size:.85rem;background:var(--bg);color:var(--ink);border-color:var(--bg)}
 .reg{display:flex;flex-direction:column}
 .reg .ri{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
@@ -488,6 +498,7 @@ nav.tabs a[hidden]{display:none}
   </section>
 </div>
 <div id="tagger" hidden>
+  <div class="rotate" role="alert"><span class="ph" aria-hidden="true"></span><b>Gira il telefono</b><span class="muted">Schieramento e rilevazione funzionano in orizzontale.</span><button type="button" class="ghost small" data-rexit>Chiudi</button></div>
   <div class="tbar">
     <button type="button" class="ghost small" id="tExit" aria-label="Chiudi la pulsantiera">✕</button>
     <span class="tt" id="tTitle"></span>
@@ -947,7 +958,7 @@ async function createSession(g,data,h,a,t,mod){
 function openSession(id,reg){
   if(T.unsub){T.unsub();T.unsub=null}
   Object.assign(T,{sid:id,s:null,sel:null,mode:null,md:null,ins:null,dirty:false,saving:false,editing:null,regOpen:!!reg});
-  $("#tagger").hidden=false;document.body.classList.add("tagopen");$("#tTitle").textContent="Caricamento…";$("#pitch").innerHTML="";$("#tside").innerHTML="";setSave("");
+  $("#tagger").hidden=false;document.body.classList.add("tagopen");lockLandscape();$("#tTitle").textContent="Caricamento…";$("#pitch").innerHTML="";$("#tside").innerHTML="";setSave("");
   T.unsub=db.doc("sessions/"+id).onSnapshot(snap=>{
     if(!snap.exists){if(!T.s){closeTagger();toast("Sessione non trovata")}return}
     const remote=snap.data();
@@ -960,9 +971,13 @@ function openSession(id,reg){
 async function closeTagger(){
   if(T.s&&canWrite){clearTimeout(T.ft);await flush();await writeIdx(T.s)}
   if(T.unsub){T.unsub();T.unsub=null}
-  $("#tagger").hidden=true;document.body.classList.remove("tagopen");closeSheet();hint(null);T.s=null;T.sid=null;
+  $("#tagger").hidden=true;document.body.classList.remove("tagopen");unlockLandscape();closeSheet();hint(null);T.s=null;T.sid=null;
 }
 $("#tExit").onclick=closeTagger;
+document.querySelector("#tagger [data-rexit]").onclick=closeTagger;
+const isPhone=()=>matchMedia("(pointer:coarse)").matches&&Math.min(screen.width,screen.height)<600;
+function lockLandscape(){if(!isPhone())return;try{const el=document.documentElement;const p=el.requestFullscreen?el.requestFullscreen({navigationUI:"hide"}):null;if(p)p.then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock("landscape")).catch(()=>{})}catch(e){}}
+function unlockLandscape(){try{if(screen.orientation&&screen.orientation.unlock)screen.orientation.unlock()}catch(e){}try{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}catch(e){}}
 
 /* --- disegno --- */
 const PITCH_LINES=`<div class="pl half"></div><div class="pl circ"></div><div class="pl bl"></div><div class="pl br"></div>`;
