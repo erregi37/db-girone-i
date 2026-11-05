@@ -16,5 +16,6 @@ Vale per persone, Claude, ChatGPT e qualsiasi altro assistente.
 - Ruolo e posizione: `ruolo` (POR, DC, TER, CEN, EST, TRQ, ATT) è la famiglia; `posizione` (es. TD, TS, QD, MEZ, CC, SP) è il posto preciso, scelto nella scheda o, se vuoto, quello con più minuti negli schieramenti (`posOf`). Mappa in `POSBYROLE`. Il quinto (QD/QS) è un'unica posizione, nella famiglia Esterni.
 - xG: `xgOf(e)` calcola l'xG di ogni tiro dai campi salvati sull'evento (`x` 0–68 larghezza, `d` 0–52,5 metri dalla linea di porta, `bp` parte del corpo, `sit` situazione, `oo` solo davanti al portiere). Il valore non viene salvato: si ricalcola, quindi il modello si può ritoccare senza perdere dati. Rigore = 0,79.
 - Presenze: `writeIdx` salva in `sessidx/<id>.pres` chi è stato schierato o è entrato, con la posizione; `aggregate` le conta finché la partita non è inviata.
+- Under: `UNDER=[2008,2007,2006]` (regola Serie D 2026/27); `underCheck` verifica che in campo ci sia un giocatore diverso per ogni fascia. Da aggiornare a ogni stagione.
 - Rilevazione: ogni sessione è un documento `sessions/<id>` con il registro degli eventi (`log`); le statistiche si ricalcolano dal registro (`replay`, `computeSess`).
 - Librerie da CDN con versione fissa: SheetJS 0.18.5, supabase-js 2.118.0.

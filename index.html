@@ -275,6 +275,14 @@ body.tagopen{overflow:hidden}
 }
 .dot{--ds:clamp(26px,min(7cqw,12cqh),58px);position:absolute;left:calc(var(--d) * 1%);top:calc(var(--l) * 1%);transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;padding:0;color:var(--ink);cursor:pointer;font:inherit}
 @media (orientation:portrait){.dot{left:calc(var(--l) * 1%);top:calc((100 - var(--d)) * 1%)}}
+.utag{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:17px;padding:0 4px;border-radius:4px;font:700 .68rem/1 var(--f-mono,monospace);letter-spacing:.02em;vertical-align:middle;margin-left:6px;color:#fff}
+.utag.u8{background:#d9468f}.utag.u7{background:#8b5cf6}.utag.u6{background:#0ea5a4}
+.dot b{position:relative}.dot .utag{position:absolute;top:-6px;right:-12px;margin:0;height:15px;min-width:18px;font-size:.6rem;box-shadow:0 0 0 2px var(--surface)}
+.usum{display:inline-flex;align-items:center;gap:2px;margin-left:10px;white-space:nowrap}.usum .utag{margin-left:6px}
+.ucheck{display:inline-flex;gap:4px;font:600 .72rem/1 var(--f-mono,monospace);white-space:nowrap}
+.ucheck span{padding:3px 6px;border-radius:4px;background:var(--soft)}
+.ucheck .n{background:var(--bad);color:#fff}
+.ucheck.ok .y{color:var(--good)}
 .dot b{width:var(--ds);height:var(--ds);border-radius:50%;background:var(--surface);border:2px solid var(--ink);display:grid;place-items:center;font-family:var(--f-display);font-size:calc(var(--ds) * .42);font-weight:700;font-variant-numeric:tabular-nums}
 .dot span{font-size:clamp(.56rem,1.9cqw,.74rem);font-weight:600;max-width:max(52px,12cqw);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--surface);padding:0 4px;border-radius:3px}
 .dot.sel b{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);outline:3px solid var(--accent);outline-offset:3px}
@@ -604,10 +612,11 @@ nav.tabs a[hidden]{display:none}
   </section>
 </div>
 <div id="tagger" hidden>
-  <div class="rotate" role="alert"><span class="ph" aria-hidden="true"></span><b>Gira il telefono</b><span class="muted">Schieramento e rilevazione funzionano in orizzontale.</span><button type="button" class="ghost small" data-rexit>Chiudi</button></div>
+  <div class="rotate" role="alert"><span class="ph" aria-hidden="true"></span><b>Gira il telefono</b><span class="muted">La pulsantiera funziona in orizzontale.</span><button type="button" class="ghost small" data-rexit>Chiudi</button></div>
   <div class="tbar">
     <button type="button" class="ghost small" id="tExit" aria-label="Chiudi la pulsantiera">✕</button>
     <span class="tt" id="tTitle"></span>
+    <span id="tUnder"></span>
     <span class="tlast" id="tLast"></span>
     <span class="tsave" id="tSave"></span>
   </div>
@@ -919,7 +928,8 @@ let RSORT={k:"ruolo",dir:1};
 const RCOLS=[["num","N.","n"],["nome","Giocatore",""],["ruolo","Ruolo",""],["pos","Posizione",""],["anno","Anno","n"],["piede","Piede",""],["pres","Pres.","n"],["min","Min","n"],["gol","Gol","n"],["assist","Assist","n"]];
 function renderRoster(){
   const t=$("#rTeam").value;const ps=Object.entries(S.players).filter(([,p])=>p.squadra===t||(p.ex||[]).includes(t));
-  const nGone=ps.filter(([,p])=>p.squadra!==t).length;$("#rCount").textContent=ps.length?`${ps.length-nGone} giocatori in rosa${nGone?` · ${nGone} ceduti`:""}`:"";
+  const nGone=ps.filter(([,p])=>p.squadra!==t).length;const cur=ps.filter(([,p])=>p.squadra===t);const uc=y=>cur.filter(([,p])=>y===2008?+p.anno>=2008:+p.anno===y).length;
+  $("#rCount").innerHTML=ps.length?`${ps.length-nGone} giocatori in rosa${nGone?` · ${nGone} ${nGone===1?"ceduto":"ceduti"}`:""}<span class="usum" title="Under in rosa: nati nel 2008 o dopo, nel 2007, nel 2006">${uTag(2008)} ${uc(2008)} ${uTag(2007)} ${uc(2007)} ${uTag(2006)} ${uc(2006)}</span>`:"";
   if(!ps.length){$("#roster").innerHTML=`<div class="panel empty"><h3>Rosa ${esc(t)} non ancora inserita</h3><p>Aggiungi i giocatori uno alla volta o incolla la rosa intera da Gestisci rosa. In alternativa la rosa si forma da sola caricando le partite.</p></div>`;return}
   const ri=k=>{const x=ROLES.findIndex(r=>r[0]===k);return x<0?99:x};
   const pord=Object.values(POSBYROLE).flat();
@@ -936,10 +946,10 @@ function renderRoster(){
   const head=RCOLS.map(([k,l])=>`<th class="sort ${CW[k].split(" ").slice(1).join(" ")}" data-rs="${k}"${k==="pres"?` title="Presenze totali; tra parentesi quante da subentrato. Contano dallo schieramento iniziale e dai cambi, anche prima di inviare la partita."`:""}${RSORT.k===k?` aria-sort="${RSORT.dir>0?"ascending":"descending"}"`:""}>${l}${RSORT.k===k?(RSORT.dir>0?" ↑":" ↓"):""}</th>`).join("");
   const mlist=`<div class="mlist">${ps.map(([pid,p])=>{const a=AGG[pid]||{},nu=numFor(p,t),gone=p.squadra!==t;
     const info=[roleLabel(p.ruolo),posName(posOf(pid)),p.anno,p.piede].filter(Boolean).join(" · ");
-    return `<button type="button" class="mitem${gone?" gone":""}" data-pid="${pid}"><span class="shirt">${nu!=null?esc(nu):"–"}</span><span class="mi-main"><b>${esc(p.nome)}</b><small>${esc(info)}</small>${gone?`<small>ceduto · ora ${esc(p.squadra)}</small>`:""}</span><span class="mi-st"><span class="${a.pres?"":"z"}"><b>${a.pres||0}${a.sub?`<small style="display:inline;font-size:.7rem"> (${a.sub})</small>`:""}</b><small title="Presenze totali; tra parentesi quante da subentrato. Contano dallo schieramento iniziale e dai cambi, anche prima di inviare la partita.">Pres.</small></span><span class="${a.min?"":"z"}"><b>${a.min||0}</b><small>Min</small></span></span></button>`}).join("")}</div>`;
+    return `<button type="button" class="mitem${gone?" gone":""}" data-pid="${pid}"><span class="shirt">${nu!=null?esc(nu):"–"}</span><span class="mi-main"><b>${esc(p.nome)}${uTag(p.anno)}</b><small>${esc(info)}</small>${gone?`<small>ceduto · ora ${esc(p.squadra)}</small>`:""}</span><span class="mi-st"><span class="${a.pres?"":"z"}"><b>${a.pres||0}${a.sub?`<small style="display:inline;font-size:.7rem"> (${a.sub})</small>`:""}</b><small title="Presenze totali; tra parentesi quante da subentrato. Contano dallo schieramento iniziale e dai cambi, anche prima di inviare la partita.">Pres.</small></span><span class="${a.min?"":"z"}"><b>${a.min||0}</b><small>Min</small></span></span></button>`}).join("")}</div>`;
   $("#roster").innerHTML=`<div class="row" style="margin-bottom:8px;align-items:center"><label for="rSort" class="label" style="margin:0">Ordina per</label><select id="rSort" style="width:auto">${RCOLS.map(([k,l])=>`<option value="${k}"${k===RSORT.k?" selected":""}>${k==="num"?"Numero di maglia":l==="Pres."?"Presenze":l==="Min"?"Minuti giocati":l}</option>`).join("")}</select><button type="button" class="ghost small" id="rDir">${RSORT.dir>0?"↑ Crescente":"↓ Decrescente"}</button></div>
   ${mlist}<div class="tablebox hide-m"><table class="rt"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${ps.map(([pid,p])=>{const a=AGG[pid]||{},tt=a.tot||{};const st=(v,x)=>`<td class="c st${v?"":" z"}${x?" "+x:""}">${v||0}</td>`;const nu=numFor(p,t);
-    return `<tr class="click${p.squadra!==t?" gone":""}" data-pid="${pid}" tabindex="0"><td class="c">${nu!=null?`<span class="shirt">${esc(nu)}</span>`:""}</td><td class="pname">${esc(p.nome)}${p.squadra!==t?` <span class="chip">ceduto · ora ${esc(p.squadra)}</span>`:""}</td><td class="sec">${esc(roleLabel(p.ruolo))}</td><td class="sec">${esc(posName(posOf(pid))||"—")}</td><td class="c sec">${esc(p.anno||"—")}</td><td class="sec">${esc(p.piede||"—")}</td><td class="c st sep${a.pres?"":" z"}">${a.pres||0}${a.sub?` <span class="muted" style="font-weight:500">(${a.sub})</span>`:""}</td>${st(a.min)}${st(tt.gol)}${st(tt.assist)}</tr>`}).join("")}</tbody></table></div><p class="note">${ps.length} giocatori. Presenze totali, tra parentesi quelle da subentrato. Tocca l'intestazione di una colonna per ordinare; toccala di nuovo per invertire.</p>`;
+    return `<tr class="click${p.squadra!==t?" gone":""}" data-pid="${pid}" tabindex="0"><td class="c">${nu!=null?`<span class="shirt">${esc(nu)}</span>`:""}</td><td class="pname">${esc(p.nome)}${uTag(p.anno)}${p.squadra!==t?` <span class="chip">ceduto · ora ${esc(p.squadra)}</span>`:""}</td><td class="sec">${esc(roleLabel(p.ruolo))}</td><td class="sec">${esc(posName(posOf(pid))||"—")}</td><td class="c sec">${esc(p.anno||"—")}</td><td class="sec">${esc(p.piede||"—")}</td><td class="c st sep${a.pres?"":" z"}">${a.pres||0}${a.sub?` <span class="muted" style="font-weight:500">(${a.sub})</span>`:""}</td>${st(a.min)}${st(tt.gol)}${st(tt.assist)}</tr>`}).join("")}</tbody></table></div><p class="note">${ps.length} giocatori. Presenze totali, tra parentesi quelle da subentrato. Tocca l'intestazione di una colonna per ordinare; toccala di nuovo per invertire.</p>`;
 }
 async function teamReport(){
   const t=$("#rTeam").value;const B=bench(+$("#fMin").value||0);
@@ -1067,6 +1077,15 @@ function openShotSheet(c,a){
     else if(t.id==="shotOk")save(true);else if(t.id==="shotNoPos")save(false)};
   upd();
 }
+/* ---------- regola under Serie D 2026/27: in campo sempre almeno un 2008 (o più giovane), un 2007 e un 2006 ---------- */
+const UNDER=[2008,2007,2006];
+const uYear=pid=>{const y=+(S.players[pid]||{}).anno;return y>=UNDER[UNDER.length-1]?y:null};
+const uTag=(anno,cls="")=>{const y=+anno;if(!(y>=UNDER[UNDER.length-1]))return "";const k=y>=2008?"u8":y>=2007?"u7":"u6";return `<span class="utag ${k} ${cls}" title="Under: nato nel ${y}">${String(y).slice(2)}</span>`};
+/* assegna a ogni fascia un giocatore diverso, partendo dalla più giovane e usando il più "vecchio" che la copre */
+function underCheck(pids){const pool=pids.filter(Boolean).map(p=>({p,y:uYear(p)})).filter(x=>x.y).sort((a,b)=>a.y-b.y);const used=new Set(),out={};
+  for(const t of UNDER){const c=pool.find(x=>x.y>=t&&!used.has(x.p));out[t]=c?c.p:null;if(c)used.add(c.p)}return out}
+function underHTML(pids){const u=underCheck(pids);const ok=UNDER.every(t=>u[t]);
+  return `<span class="ucheck${ok?" ok":" ko"}" title="${ok?"Regola under rispettata":"Manca un under in campo"}">${UNDER.map(t=>`<span class="${u[t]?"y":"n"}">${u[t]?"✓":"✗"} ${String(t).slice(2)}</span>`).join("")}</span>`}
 function computeSess(s){
   const fine=+s.fine||90,R={};
   const row=pid=>R[pid]||(R[pid]={min:0,tot:{},pos:{},in:null,out:null,tit:false});
@@ -1197,10 +1216,11 @@ function renderTagger(){
   $("#tTitle").textContent=`G${s.giornata} · ${s.squadra}`;
   const st=T.mode==="modedit"?{slots:T.md.slots,mod:T.md.mod}:curState();
   const setup=s.stato==="schieramento";$("#tagger").classList.toggle("setup",setup);
+  $("#tUnder").innerHTML=underHTML(st.slots.map(x=>x.pid));
   $("#pitch").innerHTML=PITCH_LINES+st.slots.map((sl,i)=>{
     if(!sl.pid&&!setup)return "";
     const cls=["dot"];if(!sl.pid)cls.push("empty");if(sl.pid&&sl.pid===T.sel)cls.push("sel");if(T.md&&T.md.first===sl.pid&&sl.pid)cls.push("pick");if(T.mode==="pos"&&T.md&&T.md.a===sl.pid)cls.push("pick");
-    return `<button type="button" class="${cls.join(" ")}" style="--d:${sl.d};--l:${sl.l}" data-slot="${i}" aria-label="${esc(POS[sl.pos]||sl.pos)}${sl.pid?" "+esc(numOf(s,sl.pid)):""}"><b>${sl.pid?esc(numOf(s,sl.pid)):"+"}</b><span>${sl.pid?esc(surname(sl.pid)):esc(sl.pos)}</span></button>`}).join("");
+    return `<button type="button" class="${cls.join(" ")}" style="--d:${sl.d};--l:${sl.l}" data-slot="${i}" aria-label="${esc(POS[sl.pos]||sl.pos)}${sl.pid?" "+esc(numOf(s,sl.pid)):""}"><b>${sl.pid?esc(numOf(s,sl.pid)):"+"}${sl.pid?uTag((S.players[sl.pid]||{}).anno):""}</b><span>${sl.pid?esc(surname(sl.pid)):esc(sl.pos)}</span></button>`}).join("");
   const L=s.log,at=T.ins==null?L.length:T.ins;
   const last=L.slice(Math.max(0,at-2),at).reverse();
   $("#tLast").innerHTML=last.length?last.map((e,j)=>j===0?`<b>${esc(code(s,e))}</b>`:esc(code(s,e))).join(" · ")+(T.sel?` · palla: <b>${esc(numOf(s,T.sel))}</b>`:""):(setup?"Schieramento":"Pronto");
@@ -1288,7 +1308,7 @@ function openSheet(html){const c=$("#sheetCard");c.onclick=null;c.oninput=null;c
 function closeSheet(){$("#sheet").hidden=true;$("#sheetCard").classList.remove("wide");$("#sheetCard").innerHTML="";T.regOpen=false;T.editing=null}
 $("#sheet").addEventListener("click",e=>{if(e.target.id==="sheet"||e.target.closest("[data-close]"))closeSheet()});
 function teamRoster(){return Object.entries(S.players).filter(([,p])=>p.squadra===T.s.squadra||(p.ex||[]).includes(T.s.squadra)).sort((a,b)=>(+numFor(a[1],T.s.squadra)||99)-(+numFor(b[1],T.s.squadra)||99)||norm(a[1].nome).localeCompare(norm(b[1].nome)))}
-function plistHTML(rows,attr,benchSet){return `<div class="plist">${rows.map(([pid,p])=>`<button type="button" ${attr}="${pid}" data-q="${esc(norm(p.nome)+" "+norm(lastName(p.nome))+" "+(T.s.nums[pid]??numFor(p,T.s.squadra)??""))}" class="${benchSet&&benchSet.has(pid)?"bench":""}"><b>${esc(T.s.nums[pid]??numFor(p,T.s.squadra)??"")}</b><span><span class="pn">${esc(p.nome)}</span><small class="muted">${esc(posName(p.posizione)||roleLabel(p.ruolo)||"")}${p.squadra!==T.s.squadra?" · ora "+esc(p.squadra):""}</small></span></button>`).join("")}</div>`}
+function plistHTML(rows,attr,benchSet){return `<div class="plist">${rows.map(([pid,p])=>`<button type="button" ${attr}="${pid}" data-q="${esc(norm(p.nome)+" "+norm(lastName(p.nome))+" "+(T.s.nums[pid]??numFor(p,T.s.squadra)??""))}" class="${benchSet&&benchSet.has(pid)?"bench":""}"><b>${esc(T.s.nums[pid]??numFor(p,T.s.squadra)??"")}</b><span><span class="pn">${esc(p.nome)}${uTag(p.anno)}</span><small class="muted">${esc(posName(p.posizione)||roleLabel(p.ruolo)||"")}${p.squadra!==T.s.squadra?" · ora "+esc(p.squadra):""}</small></span></button>`).join("")}</div>`}
 function openSlotPicker(i){
   const s=T.s,sl=s.lineup.slots[i],used=new Set(s.lineup.slots.map(x=>x.pid).filter(Boolean));
   const rows=teamRoster().filter(([pid])=>!used.has(pid)||pid===sl.pid);
