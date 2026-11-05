@@ -582,8 +582,8 @@ function aggregate(){
   AGG={};
   const ms=Object.values(S.matches).sort((a,b)=>(a.giornata||0)-(b.giornata||0));
   for(const m of ms){for(const [pid,r] of Object.entries(m.righe||{})){
-    const a=AGG[pid]||(AGG[pid]={min:0,pres:0,tot:{},log:[]});
-    const min=+r.min||0;a.min+=min;if(min>0)a.pres++;
+    const a=AGG[pid]||(AGG[pid]={min:0,pres:0,sub:0,tot:{},log:[]});
+    const min=+r.min||0;a.min+=min;if(min>0){a.pres++;if(r.tit===false)a.sub++}
     for(const x of M)a.tot[x.k]=(a.tot[x.k]||0)+(+r[x.k]||0);
     a.posMin=a.posMin||{};for(const [k,v] of Object.entries(r.pos||{})){const pc=k.split("@")[0];a.posMin[pc]=(a.posMin[pc]||0)+(+v.min||0)}
     a.log.push({m,r});
@@ -682,7 +682,7 @@ function renderProfile(){
       <div class="facts">
         <div><span class="label">Anno</span><b>${esc(p.anno||"—")}</b></div>
         <div><span class="label">Piede</span><b>${esc(p.piede||"—")}</b></div>
-        <div><span class="label">Presenze</span><b>${a.pres}</b></div>
+        <div><span class="label">Presenze (da subentrato)</span><b>${a.pres}${a.sub?` <span class="muted" style="font-size:.7em">(${a.sub})</span>`:""}</b></div>
         <div><span class="label">Minuti</span><b>${a.min}</b></div>
         <div><span class="label">Gol</span><b>${a.tot.gol||0}</b></div>
         <div><span class="label">xG</span><b>${fmt(a.tot.xg||0)}</b></div>
@@ -800,7 +800,7 @@ async function saveFile(filename,buf){
 
 /* ---------- rose ---------- */
 let RSORT={k:"ruolo",dir:1};
-const RCOLS=[["num","N.","n"],["nome","Giocatore",""],["ruolo","Ruolo",""],["pos","Posizione",""],["anno","Anno","n"],["piede","Piede",""],["pres","Pres.","n"],["min","Min","n"],["gol","Gol","n"],["assist","Assist","n"]];
+const RCOLS=[["num","N.","n"],["nome","Giocatore",""],["ruolo","Ruolo",""],["pos","Posizione",""],["anno","Anno","n"],["piede","Piede",""],["pres","Pres. (sub.)","n"],["min","Min","n"],["gol","Gol","n"],["assist","Assist","n"]];
 function renderRoster(){
   const t=$("#rTeam").value;const ps=Object.entries(S.players).filter(([,p])=>p.squadra===t||(p.ex||[]).includes(t));
   $("#rCount").textContent=ps.length?`${ps.length} giocatori in rosa`:"";
@@ -816,8 +816,8 @@ function renderRoster(){
     if(a!=null&&b!=null)c=typeof a==="string"?a.localeCompare(b):a-b;
     return c*RSORT.dir||ri(x[1].ruolo)-ri(y[1].ruolo)||norm(x[1].nome).localeCompare(norm(y[1].nome))});
   const head=RCOLS.map(([k,l,c])=>`<th class="sort ${c}" data-rs="${k}"${RSORT.k===k?` aria-sort="${RSORT.dir>0?"ascending":"descending"}"`:""}>${l}${RSORT.k===k?(RSORT.dir>0?" ↑":" ↓"):""}</th>`).join("");
-  $("#roster").innerHTML=`<div class="row" style="margin-bottom:8px;align-items:center"><label for="rSort" class="label" style="margin:0">Ordina per</label><select id="rSort" style="width:auto">${RCOLS.map(([k,l])=>`<option value="${k}"${k===RSORT.k?" selected":""}>${k==="num"?"Numero di maglia":l==="Pres."?"Presenze":l==="Min"?"Minuti giocati":l}</option>`).join("")}</select><button type="button" class="ghost small" id="rDir">${RSORT.dir>0?"↑ Crescente":"↓ Decrescente"}</button></div>
-  <div class="tablebox"><table><thead><tr>${head}</tr></thead><tbody>${ps.map(([pid,p])=>{const a=AGG[pid]||{};return `<tr class="click" data-pid="${pid}" tabindex="0"><td class="n">${esc(numFor(p,t)??"")}</td><td class="pname">${esc(p.nome)}${p.squadra!==t?` <span class="chip">ora ${esc(p.squadra)}</span>`:""}</td><td>${esc(roleLabel(p.ruolo))}</td><td>${esc(posName(posOf(pid))||"—")}</td><td class="n">${esc(p.anno||"—")}</td><td>${esc(p.piede||"—")}</td><td class="n">${a.pres||0}</td><td class="n">${a.min||0}</td><td class="n">${(a.tot||{}).gol||0}</td><td class="n">${(a.tot||{}).assist||0}</td></tr>`}).join("")}</tbody></table></div><p class="note">${ps.length} giocatori. Tocca l'intestazione di una colonna per ordinare; toccala di nuovo per invertire.</p>`;
+  $("#roster").innerHTML=`<div class="row" style="margin-bottom:8px;align-items:center"><label for="rSort" class="label" style="margin:0">Ordina per</label><select id="rSort" style="width:auto">${RCOLS.map(([k,l])=>`<option value="${k}"${k===RSORT.k?" selected":""}>${k==="num"?"Numero di maglia":l==="Pres. (sub.)"?"Presenze":l==="Min"?"Minuti giocati":l}</option>`).join("")}</select><button type="button" class="ghost small" id="rDir">${RSORT.dir>0?"↑ Crescente":"↓ Decrescente"}</button></div>
+  <div class="tablebox"><table><thead><tr>${head}</tr></thead><tbody>${ps.map(([pid,p])=>{const a=AGG[pid]||{};return `<tr class="click" data-pid="${pid}" tabindex="0"><td class="n">${esc(numFor(p,t)??"")}</td><td class="pname">${esc(p.nome)}${p.squadra!==t?` <span class="chip">ora ${esc(p.squadra)}</span>`:""}</td><td>${esc(roleLabel(p.ruolo))}</td><td>${esc(posName(posOf(pid))||"—")}</td><td class="n">${esc(p.anno||"—")}</td><td>${esc(p.piede||"—")}</td><td class="n">${a.pres||0}${a.sub?` <span class="muted">(${a.sub})</span>`:""}</td><td class="n">${a.min||0}</td><td class="n">${(a.tot||{}).gol||0}</td><td class="n">${(a.tot||{}).assist||0}</td></tr>`}).join("")}</tbody></table></div><p class="note">${ps.length} giocatori. Presenze totali, tra parentesi quelle da subentrato. Tocca l'intestazione di una colonna per ordinare; toccala di nuovo per invertire.</p>`;
 }
 async function teamReport(){
   const t=$("#rTeam").value;const B=bench(+$("#fMin").value||0);
@@ -1234,7 +1234,7 @@ async function sendSess(s){
   const R=computeSess(s),id=matchId(s.giornata,s.casa,s.trasferta),ref=db.doc("matches/"+id);
   const cur=await ref.get();const base=cur.exists?JSON.parse(JSON.stringify(cur.data())):{giornata:+s.giornata,data:s.data||"",casa:s.casa,trasferta:s.trasferta,golCasa:null,golTrasf:null};
   const righe=base.righe||{};for(const [pid,r] of Object.entries(righe))if(r.squadra===s.squadra)delete righe[pid];
-  for(const [pid,r] of Object.entries(R)){if(!S.players[pid])continue;const o={squadra:s.squadra,min:r.min,pos:r.pos};M.forEach(m=>o[m.k]=r.tot[m.k]||0);righe[pid]=o}
+  for(const [pid,r] of Object.entries(R)){if(!S.players[pid])continue;const o={squadra:s.squadra,min:r.min,pos:r.pos,tit:!!r.tit};M.forEach(m=>o[m.k]=r.tot[m.k]||0);righe[pid]=o}
   const gf=Object.values(R).reduce((a,r)=>a+(r.tot.gol||0),0),gs=s.log.filter(e=>e.t==="e"&&e.c==="GS").length;
   if(s.squadra===s.casa){base.golCasa=gf;if(base.golTrasf==null)base.golTrasf=gs}else{base.golTrasf=gf;if(base.golCasa==null)base.golCasa=gs}
   if(!base.data&&s.data)base.data=s.data;
