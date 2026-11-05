@@ -145,6 +145,12 @@ table.rt td.st{font-variant-numeric:tabular-nums;font-weight:600}
 .badge{--h:200;display:inline-grid;place-items:center;width:34px;height:38px;flex:0 0 auto;font-family:var(--f-display);font-weight:800;font-size:.78rem;letter-spacing:.04em;color:#fff;background:linear-gradient(160deg,hsl(var(--h) 62% 46%),hsl(calc(var(--h) + 30) 66% 30%));clip-path:polygon(0 0,100% 0,100% 70%,50% 100%,0 70%);text-shadow:0 1px 1px rgba(0,0,0,.35)}
 .badge.lg{width:46px;height:52px;font-size:1rem}
 img.badge{background:none;clip-path:none;object-fit:contain;text-shadow:none}
+/* Stemmi predefiniti: sigla di riserva se un fornitore esterno non risponde */
+.badge-remote{display:inline-grid;place-items:center;width:34px;height:38px;flex:0 0 auto}
+.badge-remote.lg{width:46px;height:52px}
+.badge-remote>.badge{grid-area:1/1}
+.badge-remote>.badge[hidden]{display:none!important}
+
 .gsel{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
 .gstrip{display:flex;gap:4px;overflow-x:auto;padding-bottom:4px}
 .gstrip button{min-width:38px;padding:6px 8px;font-family:var(--f-display);font-size:.95rem;background:var(--surface);color:var(--muted);border:1px solid var(--line)}
@@ -823,7 +829,7 @@ async function saveMatch(){
 function renderMatches(){
   const ms=Object.entries(S.matches).sort((x,y)=>(y[1].giornata||0)-(x[1].giornata||0));
   if(!ms.length){$("#matchList").innerHTML=`<div class="panel empty"><h3>Nessuna partita ancora</h3><p>Scegli giornata e squadre qui sopra, scarica il modello, compilalo e caricalo.</p></div>`;return}
-  $("#matchList").innerHTML=`<div class="tablebox"><table><thead><tr><th class="n">G.</th><th>Data</th><th>Partita</th><th class="n">Ris.</th><th class="n">Righe</th><th></th></tr></thead><tbody>${ms.map(([id,m])=>`<tr><td class="n">${m.giornata}</td><td class="mono">${esc(m.data||"")}</td><td>${esc(m.casa)} – ${esc(m.trasferta)}</td><td class="n">${m.golCasa??""}–${m.golTrasf??""}</td><td class="n">${Object.keys(m.righe||{}).length}</td><td>${canWrite?`<span data-mdel="${id}"><button type="button" class="danger small" data-ask>Elimina</button></span>`:""}</td></tr>`).join("")}</tbody></table></div>`;
+  $("#matchList").innerHTML=`<div class="tablebox"><table><thead><tr><th class="n">G.</th><th>Data</th><th>Partita</th><th class="n">Ris.</th><th class="n">Righe</th><th></th></tr></thead><tbody>${ms.map(([id,m])=>`<tr><td class="n">${m.giornata}</td><td class="mono">${esc(m.data||"")}</td><td><span class="row" style="gap:7px;flex-wrap:nowrap;align-items:center">${badge(m.casa)}<span>${esc(m.casa)}</span><span class="muted">–</span>${badge(m.trasferta)}<span>${esc(m.trasferta)}</span></span></td><td class="n">${m.golCasa??""}–${m.golTrasf??""}</td><td class="n">${Object.keys(m.righe||{}).length}</td><td>${canWrite?`<span data-mdel="${id}"><button type="button" class="danger small" data-ask>Elimina</button></span>`:""}</td></tr>`).join("")}</tbody></table></div>`;
 }
 async function downloadTemplate(){
   const h=$("#mHome").value,a=$("#mAway").value;
@@ -1309,7 +1315,32 @@ async function sendSess(s){
 const CALAB=["Reggina","Vigor Lamezia","Sambiase","Vibonese","Digiesse Praia Tortora"];
 const SIGLA={"Athletic Palermo":"ATP","Avola":"AVO","Castrumfavara":"CAS","Digiesse Praia Tortora":"PRA","Enna":"ENN","Gela":"GEL","Licata":"LIC","Milazzo":"MIL","Modica":"MOD","Nissa":"NIS","Nuova Igea Virtus":"IGE","Ragusa":"RAG","Reggina":"REG","Sambiase":"SAM","Siracusa":"SIR","Trapani":"TRA","Vibonese":"VIB","Vigor Lamezia":"VIG"};
 let CAL={},GSEL=null,GEDIT=null,CREST={},COACH={};
-function badge(t,lg){const cr=CREST[norm(t)];if(cr&&(cr.id||cr.url))return `<img class="badge${lg?" lg":""}" src="${esc(cr.id?"/_blob/"+cr.id:cr.url)}" alt="">`;let h=0;for(const c of String(t))h=(h*31+c.charCodeAt(0))%360;return `<span class="badge${lg?" lg":""}" style="--h:${h}" aria-hidden="true">${esc(SIGLA[t]||String(t).slice(0,3).toUpperCase())}</span>`}
+// Solo squadre non calabresi: gli stemmi già caricati dall'utente su Supabase hanno sempre la precedenza.
+// I loghi esterni non vengono salvati nel database; se il server non risponde appare la sigla.
+const DEFAULT_TEAM_CRESTS={
+  "Athletic Palermo": "https://b-content.tuttocampo.it/Teams/Original/936154.png?v=5",
+  "Avola": "https://content-s3.tuttocampo.it/Teams/Original/68233.png?v=13",
+  "Castrumfavara": "https://assets.football-logos.cc/logos/italy/1500x1500/castrum-favara.e8569688.png",
+  "Enna": "https://assets.football-logos.cc/logos/italy/1500x1500/enna-calcio.ad5ff07e.png",
+  "Gela": "https://assets.football-logos.cc/logos/italy/1500x1500/gela-calcio.e86f33aa.png",
+  "Licata": "https://r2.thesportsdb.com/images/media/team/badge/hselbo1683254994.png",
+  "Milazzo": "https://assets.football-logos.cc/logos/italy/1500x1500/milazzo.68f5559c.png",
+  "Modica": "https://images.seeklogo.com/logo-png/55/1/asd-modica-calcio-1932-logo-png_seeklogo-550081.png",
+  "Nissa": "https://b-content.tuttocampo.it/Teams/Original/1066758.png?v=2",
+  "Nuova Igea Virtus": "https://content-s3.tuttocampo.it/Teams/Original/910961.png?v=2",
+  "Ragusa": "https://b2-content.tuttocampo.it/Teams/Original/916056.png?v=2",
+  "Siracusa": "https://b2-content.tuttocampo.it/Teams/Original/913411.png?v=2",
+  "Trapani": "https://images.seeklogo.com/logo-png/21/1/trapani-calcio-1905-logo-png_seeklogo-217482.png"
+};
+function badge(t,lg){
+  const cr=CREST[norm(t)];
+  if(cr&&(cr.id||cr.url))return `<img class="badge${lg?" lg":""}" src="${esc(cr.id?"/_blob/"+cr.id:cr.url)}" alt="">`;
+  let h=0;for(const c of String(t))h=(h*31+c.charCodeAt(0))%360;
+  const placeholder=`<span class="badge${lg?" lg":""}" style="--h:${h}" aria-hidden="true">${esc(SIGLA[t]||String(t).slice(0,3).toUpperCase())}</span>`;
+  const logo=DEFAULT_TEAM_CRESTS[t];
+  if(!logo)return placeholder;
+  return `<span class="badge-remote${lg?" lg":""}"><img class="badge${lg?" lg":""}" src="${esc(logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="badge${lg?" lg":""}" style="--h:${h}" aria-hidden="true" hidden>${esc(SIGLA[t]||String(t).slice(0,3).toUpperCase())}</span></span>`;
+}
 function fmtDate(d){if(!d)return "";const [y,m,g]=d.split("-");const dt=new Date(+y,+m-1,+g);return dt.toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short"})}
 function scorersHTML(m){
   if(m.golCasa==null)return "";
