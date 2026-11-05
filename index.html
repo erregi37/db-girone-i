@@ -694,7 +694,7 @@ const norm=s=>String(s??"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,""
 const GENERIC=["","difesa","difensore","centrocampo","centrocampista","attacco","attaccante"];
 const POS2ROLE={POR:"POR",TD:"TER",TS:"TER",DC:"DC",BR:"DC",BRD:"DC",BRS:"DC",QD:"EST",QS:"EST",ED:"EST",ES:"EST",AD:"EST",AS:"EST",REG:"CEN",MED:"CEN",MEZ:"CEN",CC:"CEN",TRQ:"TRQ",SP:"TRQ",PC:"ATT"};
 const POSBYROLE={POR:["POR"],DC:["DC","BRD","BRS"],TER:["TD","TS"],CEN:["REG","MED","MEZ","CC"],EST:["ED","ES","QD","QS","AD","AS"],TRQ:["TRQ","SP"],ATT:["PC"]};
-const posName=k=>({POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",BRD:"Braccetto destro",BRS:"Braccetto sinistro",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Regista",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"})[k]||k||"";
+const posName=k=>({POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",BRD:"Braccetto destro",BRS:"Braccetto sinistro",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Play",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"})[k]||k||"";
 /* posizione principale: quella scelta nella scheda, altrimenti quella con più minuti negli schieramenti */
 function posOf(pid){const p=S.players[pid]||{};return p.posizione||topPos(pid)}
 function posOpts(r,cur){return `<option value="">Automatica</option>`+(POSBYROLE[r]||[]).map(k=>`<option value="${k}"${k===cur?" selected":""}>${esc(posName(k))}</option>`).join("")}
@@ -1010,7 +1010,7 @@ function renderGloss(){
 }
 
 /* ================= RILEVAZIONE (pulsantiera) ================= */
-const POS={POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",BRD:"Braccetto destro",BRS:"Braccetto sinistro",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Regista",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"};
+const POS={POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",BRD:"Braccetto destro",BRS:"Braccetto sinistro",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Play",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"};
 const B4=[["POR",6,50],["TS",24,12],["DC",21,37],["DC",21,63],["TD",24,88]],B3=[["POR",6,50],["BRS",22,22],["DC",19,50],["BRD",22,78]];
 const FORM={
  "4-3-3":[...B4,["MEZ",50,25],["REG",41,50],["MEZ",50,75],["AS",76,15],["PC",83,50],["AD",76,85]],
