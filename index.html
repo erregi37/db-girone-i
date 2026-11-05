@@ -659,7 +659,7 @@ function renderSearch(){
     rows.push({pid,p,a});
   }
   const sk=S.sort||{k:cols[0],dir:-1};
-  const sv=r=>sk.k==="nome"?norm(r.p.nome):sk.k==="min"?r.a.min:sk.k==="anno"?(+r.p.anno||0):val(r.a,INDK[sk.k]);
+  const sv=r=>sk.k==="nome"?sortName(r.p.nome):sk.k==="min"?r.a.min:sk.k==="anno"?(+r.p.anno||0):val(r.a,INDK[sk.k]);
   rows.sort((x,y)=>{const a=sv(x),b=sv(y);if(a==null&&b==null)return 0;if(a==null)return 1;if(b==null)return -1;return (a>b?1:a<b?-1:0)*sk.dir});
   $("#resCount").textContent=`${rows.length} giocatori${BENCH.n?` · medie su ${BENCH.n} con almeno ${minMin}'`:""}`;
   const total=Object.keys(S.players).length;
@@ -823,7 +823,7 @@ function renderRoster(){
   const ri=k=>{const x=ROLES.findIndex(r=>r[0]===k);return x<0?99:x};
   const pord=Object.values(POSBYROLE).flat();
   const key=([pid,p])=>{const a=AGG[pid]||{};switch(RSORT.k){
-    case"num":return numFor(p,t);case"nome":return norm(p.nome);case"ruolo":return ri(p.ruolo);
+    case"num":return numFor(p,t);case"nome":return sortName(p.nome);case"ruolo":return ri(p.ruolo);
     case"pos":{const k=posOf(pid);return k?pord.indexOf(k):null}case"anno":return +p.anno||null;case"piede":return p.piede||null;
     case"pres":return a.pres||0;case"min":return a.min||0;case"gol":return (a.tot||{}).gol||0;case"assist":return (a.tot||{}).assist||0}};
   ps.sort((x,y)=>{const a=key(x),b=key(y);let c=0;
@@ -890,7 +890,13 @@ let SESS={};
 const numFor=(p,team)=>p?((p.numeri&&p.numeri[team]!=null)?p.numeri[team]:(p.squadra===team?p.numero??null:null)):null;
 const rid=()=>Math.random().toString(36).slice(2,9);
 const slotsFrom=mod=>FORM[mod].map(([pos,d,l])=>({pos,d,l,pid:null}));
-const surname=pid=>{const p=S.players[pid];return p?String(p.nome).trim().split(/\s+/).slice(-1)[0]:"?"};
+/* cognome: dalla prima particella (De, Di, La, D'…) in poi, altrimenti l'ultima parola */
+const PART=new Set(["de","di","del","della","dello","dei","degli","da","dal","dalla","la","lo","le","li","van","von","dos","das","do","mac","mc","san","santo"]);
+function lastName(nome){const w=String(nome||"").trim().split(/\s+/);if(w.length<2)return w[0]||"";
+  for(let i=1;i<w.length-1;i++){const x=w[i].toLowerCase();if(PART.has(x)||/^d['’]/.test(x))return w.slice(i).join(" ")}
+  return w[w.length-1]}
+const sortName=nome=>norm(lastName(nome))+" "+norm(nome);
+const surname=pid=>{const p=S.players[pid];return p?lastName(p.nome):"?"};
 const numOf=(s,pid)=>pid?(s.nums[pid]??"?"):"";
 
 function replay(s,upto,onEntry){
