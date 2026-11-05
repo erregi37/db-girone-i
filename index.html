@@ -320,6 +320,16 @@ body.tagopen{overflow:hidden}
 .numrow .nm{display:flex;flex-direction:column;min-width:0}
 .numrow .nm b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
 .numrow .nm small{color:var(--muted);font-size:.75rem}
+.poslist{display:flex;flex-direction:column;gap:6px}
+.poslist details{border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.poslist summary{display:grid;grid-template-columns:minmax(0,1fr) auto 56px;gap:12px;align-items:center;padding:10px 12px;cursor:pointer;list-style:none}
+.poslist summary::-webkit-details-marker{display:none}
+.poslist summary::after{content:"▸";grid-column:4;color:var(--muted);transition:transform .15s}
+.poslist details[open] summary::after{transform:rotate(90deg)}
+.poslist summary span:nth-child(2){font-weight:600;font-variant-numeric:tabular-nums}
+.poslist summary span:nth-child(3),.poslist li span:nth-child(3){text-align:right;font-variant-numeric:tabular-nums}
+.poslist ul{list-style:none;margin:0;padding:0 12px 10px 24px;display:flex;flex-direction:column;gap:4px}
+.poslist li{display:grid;grid-template-columns:minmax(0,1fr) auto 56px;gap:12px;font-size:.9rem;padding:4px 18px 4px 0;border-top:1px dashed var(--line)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chips button{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-weight:600}
 .chips button[hidden]{display:none}
@@ -682,9 +692,9 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm=s=>String(s??"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
 const GENERIC=["","difesa","difensore","centrocampo","centrocampista","attacco","attaccante"];
-const POS2ROLE={POR:"POR",TD:"TER",TS:"TER",DC:"DC",BR:"DC",QD:"EST",QS:"EST",ED:"EST",ES:"EST",AD:"EST",AS:"EST",REG:"CEN",MED:"CEN",MEZ:"CEN",CC:"CEN",TRQ:"TRQ",SP:"TRQ",PC:"ATT"};
-const POSBYROLE={POR:["POR"],DC:["DC","BR"],TER:["TD","TS"],CEN:["REG","MED","MEZ","CC"],EST:["ED","ES","QD","QS","AD","AS"],TRQ:["TRQ","SP"],ATT:["PC"]};
-const posName=k=>({POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Regista",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"})[k]||k||"";
+const POS2ROLE={POR:"POR",TD:"TER",TS:"TER",DC:"DC",BR:"DC",BRD:"DC",BRS:"DC",QD:"EST",QS:"EST",ED:"EST",ES:"EST",AD:"EST",AS:"EST",REG:"CEN",MED:"CEN",MEZ:"CEN",CC:"CEN",TRQ:"TRQ",SP:"TRQ",PC:"ATT"};
+const POSBYROLE={POR:["POR"],DC:["DC","BRD","BRS"],TER:["TD","TS"],CEN:["REG","MED","MEZ","CC"],EST:["ED","ES","QD","QS","AD","AS"],TRQ:["TRQ","SP"],ATT:["PC"]};
+const posName=k=>({POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",BRD:"Braccetto destro",BRS:"Braccetto sinistro",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Regista",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"})[k]||k||"";
 /* posizione principale: quella scelta nella scheda, altrimenti quella con più minuti negli schieramenti */
 function posOf(pid){const p=S.players[pid]||{};return p.posizione||topPos(pid)}
 function posOpts(r,cur){return `<option value="">Automatica</option>`+(POSBYROLE[r]||[]).map(k=>`<option value="${k}"${k===cur?" selected":""}>${esc(posName(k))}</option>`).join("")}
@@ -714,6 +724,8 @@ function aggregate(){
     const bt=teamAgg(a,r.squadra);bt.min+=min;if(min>0){bt.pres++;if(r.tit===false)bt.sub++}for(const x of M)bt.tot[x.k]=(bt.tot[x.k]||0)+(+r[x.k]||0);
     a.posMin=a.posMin||{};const pm={};for(const [k,v] of Object.entries(r.pos||{})){const pc=k.split("@")[0];a.posMin[pc]=(a.posMin[pc]||0)+(+v.min||0);pm[pc]=(pm[pc]||0)+(+v.min||0)}
     const tp=Object.entries(pm).sort((x,y)=>y[1]-x[1])[0];if(tp&&tp[1]>0){a.posApp=a.posApp||{};a.posApp[tp[0]]=(a.posApp[tp[0]]||0)+1}
+    a.posK=a.posK||{};const pe=Object.entries(r.pos||{});pe.forEach(([k,v])=>{const o=a.posK[k]||(a.posK[k]={n:0,min:0});o.min+=+v.min||0});
+    const tk=pe.sort((x,y)=>(+y[1].min||0)-(+x[1].min||0))[0];if(tk&&+tk[1].min>0)a.posK[tk[0]].n++;
     a.log.push({m,r});
   }}
   /* partite schierate ma non ancora inviate: contano la presenza (e il subentro) e la posizione */
@@ -723,7 +735,8 @@ function aggregate(){
     for(const [pid,r] of Object.entries(x.pres)){
       const a=AGG[pid]||(AGG[pid]={min:0,pres:0,sub:0,tot:{},log:[]});
       a.pres++;if(!r.tit)a.sub++;const bt=teamAgg(a,x.squadra);bt.pres++;if(!r.tit)bt.sub++;
-      if(r.pos){a.posApp=a.posApp||{};a.posApp[r.pos]=(a.posApp[r.pos]||0)+1}}}
+      if(r.pos){a.posApp=a.posApp||{};a.posApp[r.pos]=(a.posApp[r.pos]||0)+1}
+      if(r.pk){a.posK=a.posK||{};const o=a.posK[r.pk]||(a.posK[r.pk]={n:0,min:0});o.n++}}}
 }
 function val(a,ind){if(!a)return null;
   if(ind.type==="p90")return a.min>0?a.tot[ind.k]/a.min*90:null;
@@ -834,8 +847,11 @@ function renderProfile(){
       <h3>Dati ogni 90' a confronto</h3>
       <div class="tablebox"><table><thead><tr><th>Dato</th><th class="n">Lui</th><th class="n">Media ruolo</th><th class="n">Media girone</th><th>Percentile ruolo</th><th class="n">Pct</th></tr></thead><tbody>${rows}</tbody></table></div>
       <p class="note">Medie calcolate sui giocatori con almeno ${minMin}' (si cambia dai filtri di ricerca).${a.min<900?" Questo giocatore ha meno di 900': leggi solo gli scarti netti.":""}</p>
-      ${(()=>{const pm={};a.log.forEach(({r})=>Object.entries(r.pos||{}).forEach(([k,v])=>{pm[k]=(pm[k]||0)+(+v.min||0)}));const e=Object.entries(pm).sort((x,y)=>y[1]-x[1]);
-        return e.length?`<h3>Minuti per posizione e modulo</h3><div class="tablebox"><table><thead><tr><th>Posizione</th><th>Modulo</th><th class="n">Minuti</th></tr></thead><tbody>${e.map(([k,m])=>`<tr><td>${esc(POS[k.split("@")[0]]||k.split("@")[0])}</td><td>${esc(k.split("@")[1]||"")}</td><td class="n">${m}</td></tr>`).join("")}</tbody></table></div>`:""})()}
+      ${(()=>{const G={};Object.entries(a.posK||{}).forEach(([k,v])=>{const [pc,mod]=k.split("@");const g=G[pc]||(G[pc]={n:0,min:0,mods:{}});g.n+=v.n;g.min+=v.min;g.mods[mod||"?"]=v});
+        const gs=Object.entries(G).filter(([,g])=>g.n||g.min).sort((x,y)=>y[1].n-x[1].n||y[1].min-x[1].min);if(!gs.length)return "";
+        return `<h3>Posizioni</h3><div class="poslist">${gs.map(([pc,g])=>`<details><summary><b>${esc(posName(pc)||POS[pc]||pc)}</b><span>${g.n} ${g.n===1?"partita":"partite"}</span><span class="muted">${g.min?g.min+"'":""}</span></summary>
+          <ul>${Object.entries(g.mods).sort((x,y)=>y[1].n-x[1].n||y[1].min-x[1].min).map(([m,v])=>`<li><span>${esc(m)}</span><span>${v.n} ${v.n===1?"partita":"partite"}</span><span class="muted">${v.min?v.min+"'":""}</span></li>`).join("")}</ul></details>`).join("")}</div>
+        <p class="note" style="margin:4px 0 0">Partite = quelle in cui ha giocato soprattutto in quella posizione. Tocca una posizione per vedere i moduli. I minuti arrivano quando la partita viene inviata.</p>`})()}
       ${(()=>{const pens=[];for(const x of Object.values(SESS))(x.rig||[]).forEach(r=>{if(r.pid===S.pid)pens.push({...r,x})});if(!pens.length)return "";
         pens.sort((a,b)=>(a.x.giornata||0)-(b.x.giornata||0));const es=r=>r.c==="GOLR"?["g","Segnato"]:r.c==="TIP"?["p","Parato"]:["f","Sbagliato"];
         const dots=pens.filter(r=>r.gx!=null).map(r=>`<circle class="mk ${es(r)[0]}" cx="${r.gx}" cy="${r.gy}" r=".14"><title>G${r.x.giornata} ${es(r)[1]}</title></circle>`).join("");
@@ -994,8 +1010,8 @@ function renderGloss(){
 }
 
 /* ================= RILEVAZIONE (pulsantiera) ================= */
-const POS={POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Regista",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"};
-const B4=[["POR",6,50],["TS",24,12],["DC",21,37],["DC",21,63],["TD",24,88]],B3=[["POR",6,50],["BR",22,22],["DC",19,50],["BR",22,78]];
+const POS={POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",BRD:"Braccetto destro",BRS:"Braccetto sinistro",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Regista",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"};
+const B4=[["POR",6,50],["TS",24,12],["DC",21,37],["DC",21,63],["TD",24,88]],B3=[["POR",6,50],["BRS",22,22],["DC",19,50],["BRD",22,78]];
 const FORM={
  "4-3-3":[...B4,["MEZ",50,25],["REG",41,50],["MEZ",50,75],["AS",76,15],["PC",83,50],["AD",76,85]],
  "4-4-2":[...B4,["ES",52,12],["CC",46,37],["CC",46,63],["ED",52,88],["PC",80,37],["PC",80,63]],
@@ -1126,7 +1142,10 @@ function underCheck(pids){const pool=pids.filter(Boolean).map(p=>({p,y:uYear(p)}
   for(const t of UNDER){const c=pool.find(x=>x.y>=t&&!used.has(x.p));out[t]=c?c.p:null;if(c)used.add(c.p)}return out}
 function underHTML(pids){const u=underCheck(pids);const ok=UNDER.every(t=>u[t]);
   return `<span class="ucheck${ok?" ok":" ko"}" title="${ok?"Regola under rispettata":"Manca un under in campo"}">${UNDER.map(t=>`<span class="${u[t]?"y":"n"}">${u[t]?"✓":"✗"} ${String(t).slice(2)}</span>`).join("")}</span>`}
-function computeSess(s){
+/* vecchie sessioni: "BR" diventa braccetto destro o sinistro in base al lato del campo */
+function fixBR(slots){(slots||[]).forEach(sl=>{if(sl.pos==="BR")sl.pos=sl.l<50?"BRS":"BRD"})}
+function normSess(s){if(!s)return s;fixBR(s.lineup&&s.lineup.slots);(s.log||[]).forEach(e=>{if(e.t==="mod")fixBR(e.slots)});return s}
+function computeSess(s){normSess(s);
   const fine=+s.fine||90,R={};
   const row=pid=>R[pid]||(R[pid]={min:0,tot:{},pos:{},in:null,out:null,tit:false});
   const bump=(o,k)=>{o[k]=(o[k]||0)+1};
@@ -1189,8 +1208,7 @@ async function flush(){
 }
 /* presenze dallo schieramento: chi parte titolare e chi entra, con la posizione in cui ha giocato di più */
 function presFrom(s){const out={};try{const R=computeSess(s);for(const [pid,r] of Object.entries(R)){if(!r.tit&&r.in==null)continue;
-  const pm={};for(const [k,v] of Object.entries(r.pos||{})){const pc=k.split("@")[0];pm[pc]=(pm[pc]||0)+(+v.min||0)}
-  const top=Object.entries(pm).sort((a,b)=>b[1]-a[1])[0];out[pid]={tit:!!r.tit,pos:top?top[0]:null}}}catch(e){}return out}
+  const top=Object.entries(r.pos||{}).sort((a,b)=>(+b[1].min||0)-(+a[1].min||0))[0];out[pid]={tit:!!r.tit,pos:top?top[0].split("@")[0]:null,pk:top?top[0]:null}}}catch(e){}return out}
 async function writeIdx(s){try{await db.doc("sessidx/"+T.sid).set({giornata:+s.giornata,data:s.data||"",casa:s.casa,trasferta:s.trasferta,squadra:s.squadra,stato:s.stato,n:s.log.length,pres:presFrom(s),rig:s.log.map((e,i)=>[e,i]).filter(([e])=>e.t==="e"&&e.a&&(e.c==="GOLR"||e.sit==="rig")).map(([e,i])=>({pid:e.a,c:e.c,bp:e.bp||null,gx:e.gx??null,gy:e.gy??null,sc:e.sc||scoreAt(s,i)})),aggiornato:Date.now()})}catch(e){}}
 
 /* --- elenco sessioni --- */
@@ -1230,7 +1248,7 @@ function openSession(id,reg){
   $("#tagger").hidden=false;document.body.classList.add("tagopen");lockLandscape();$("#tTitle").textContent="Caricamento…";$("#pitch").innerHTML="";$("#tside").innerHTML="";setSave("");
   T.unsub=db.doc("sessions/"+id).onSnapshot(snap=>{
     if(!snap.exists){if(!T.s){closeTagger();toast("Sessione non trovata")}return}
-    const remote=snap.data();
+    const remote=normSess(snap.data());
     if(!T.s){let s=JSON.parse(JSON.stringify(remote));
       try{const b=JSON.parse(localStorage.getItem("og_sess_"+id)||"null");if(b&&(b.rev||0)>(s.rev||0)&&canWrite){s=b;T.s=s;persist();toast("Ripristinati gli eventi salvati sul dispositivo")}}catch(e){}
       T.s=s;setSave("Salvato");renderTagger();if(T.regOpen)openRegistro();return}
