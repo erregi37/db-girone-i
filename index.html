@@ -1278,7 +1278,7 @@ function renderTagger(){
   $("#pitch").innerHTML=PITCH_LINES+st.slots.map((sl,i)=>{
     if(!sl.pid&&!setup)return "";
     const cls=["dot"];if(!sl.pid)cls.push("empty");if(sl.pid&&sl.pid===T.sel)cls.push("sel");if(T.md&&T.md.first===sl.pid&&sl.pid)cls.push("pick");if(T.mode==="pos"&&T.md&&T.md.a===sl.pid)cls.push("pick");
-    return `<button type="button" class="${cls.join(" ")}" style="--d:${sl.d};--l:${sl.l}" data-slot="${i}" aria-label="${esc(POS[sl.pos]||sl.pos)}${sl.pid?" "+esc(numOf(s,sl.pid)):""}"><b>${sl.pid?esc(numOf(s,sl.pid)):"+"}${sl.pid?uTag((S.players[sl.pid]||{}).anno):""}</b><span>${sl.pid?esc(surname(sl.pid)):esc(sl.pos)}</span></button>`}).join("");
+    return `<button type="button" class="${cls.join(" ")}" style="--d:${sl.d};--l:${sl.l}" data-slot="${i}" aria-label="${esc(POS[sl.pos]||sl.pos)}${sl.pid?" "+esc(numOf(s,sl.pid)):""}"><b>${sl.pid?esc(numOf(s,sl.pid)):"+"}${sl.pid?uTag((S.players[sl.pid]||{}).anno):""}</b><span>${sl.pid?esc(surname(sl.pid)):esc(sl.pos==="REG"?"PLAY":sl.pos)}</span></button>`}).join("");
   const L=s.log,at=T.ins==null?L.length:T.ins;
   const last=L.slice(Math.max(0,at-2),at).reverse();
   $("#tLast").innerHTML=last.length?last.map((e,j)=>j===0?`<b>${esc(code(s,e))}</b>`:esc(code(s,e))).join(" · ")+(T.sel?` · palla: <b>${esc(numOf(s,T.sel))}</b>`:""):(setup?"Schieramento":"Pronto");
