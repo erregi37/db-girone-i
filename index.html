@@ -100,7 +100,7 @@ tr.click{cursor:pointer}
 tbody tr.click:hover{background:var(--soft)}
 tbody tr.click:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .pname{font-weight:600}
-table.rt{table-layout:fixed;min-width:860px}
+table.rt{table-layout:fixed;min-width:1080px}
 table.rt th,table.rt td{padding:10px 8px}
 table.rt th.c,table.rt td.c{text-align:center}
 table.rt col.w-num{width:56px}table.rt col.w-role{width:150px}table.rt col.w-pos{width:170px}table.rt col.w-yr{width:70px}table.rt col.w-ft{width:96px}table.rt col.w-st{width:76px}table.rt col.w-pr{width:96px}
@@ -109,7 +109,7 @@ table.rt td.sec{color:var(--muted)}
 table.rt .sep{border-left:1px solid var(--line)}
 table.rt tbody tr:nth-child(even){background:color-mix(in srgb,var(--soft) 45%,transparent)}
 table.rt tbody tr.click:hover{background:var(--soft)}
-table.rt .shirt{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:26px;padding:0 4px;border-radius:5px;background:var(--soft);color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.shirt{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:26px;padding:0 4px;border-radius:5px;background:var(--soft);color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
 table.rt tr.gone td{opacity:.6}table.rt tr.gone:hover td{opacity:1}
 table.rt td.z{color:var(--muted);opacity:.55}
 table.rt td.st{font-variant-numeric:tabular-nums;font-weight:600}
@@ -172,11 +172,48 @@ img.badge{background:none;clip-path:none;object-fit:contain;text-shadow:none}
 .cov .covt>span{display:flex;flex-direction:column;line-height:1.2;min-width:0}
 .cov .covt small{font-size:.76rem}
 .cov .chip{flex:0 0 auto}
+/* liste a schede per telefono (al posto delle tabelle larghe) */
+.mlist{display:none}
+.mitem{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center;width:100%;text-align:left;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-weight:400;cursor:pointer}
+.mitem:active{background:var(--soft)}
+.mitem.gone{opacity:.6}
+.mitem .mi-main{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mitem .mi-main b{font-size:1rem;line-height:1.2;overflow-wrap:anywhere}
+.mitem .mi-main small{color:var(--muted);font-size:.8rem;line-height:1.3}
+.mitem .mi-st{display:flex;gap:12px;text-align:center}
+.mitem .mi-st span{display:flex;flex-direction:column;min-width:34px}
+.mitem .mi-st b{font-family:var(--f-display);font-size:1.15rem;line-height:1;font-variant-numeric:tabular-nums}
+.mitem .mi-st small{font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:3px}
+.mitem .mi-st .z b{color:var(--muted);opacity:.6}
+.mitem .mi-x{grid-column:2/-1;display:flex;flex-wrap:wrap;gap:4px 6px}
+.mitem .mi-x span{font-size:.75rem;padding:2px 7px;border-radius:999px;background:var(--soft);color:var(--ink);font-variant-numeric:tabular-nums}
+.mitem .mi-x .up{color:var(--good)}.mitem .mi-x .down{color:var(--bad)}
+.tlink{cursor:pointer;text-decoration:none;color:inherit}
+.tlink:hover span{text-decoration:underline;text-underline-offset:3px}
+@media (max-width:700px){
+  .mlist{display:flex;flex-direction:column;gap:8px}
+  .hide-m{display:none!important}
+  .wrap{padding-block:10px 40px}
+  header.top{padding:12px;gap:10px}
+  header.top h1{font-size:1.55rem}
+  .brand .sub{display:none}
+  header.top>.stack{width:100%;align-items:stretch!important}
+  .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;width:100%}
+  .kpi{flex-direction:row-reverse;justify-content:flex-end;align-items:center;gap:8px}
+  .kpi .label{font-size:.66rem;letter-spacing:.05em;line-height:1.2}
+  .kpi b{font-size:1.45rem}
+  .kpi>.muted{display:none}
+  .who{justify-content:space-between}
+  #status{text-align:left}
+  nav.tabs{position:sticky;top:0;z-index:20;background:var(--bg);margin:10px -16px 12px;padding:8px 16px;border-bottom:1px solid var(--line)}
+  nav.tabs a{font-size:.9rem;padding:7px 12px}
+}
 @media (max-width:560px){
   .fix{padding:14px 12px;gap:8px}
   .fix .tm,.fix .tm.away{flex-direction:column;text-align:center;gap:6px}
-  .fix .tm span{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.15;font-size:.95rem;overflow-wrap:anywhere}
+  .fix .tm span{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.15;font-size:.95rem;overflow-wrap:normal;hyphens:auto}
   .fix .score{font-size:1.6rem;min-width:64px}
+  .fix .score.tbd{font-size:.8rem;min-width:0}
   .fix .meta{flex-direction:column;align-items:stretch}
   .covs{flex:none}
   .cov{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
@@ -207,7 +244,7 @@ body.tagopen{overflow:hidden}
 #tagger[hidden]{display:none!important}
 .rotate{display:none}
 @media (orientation:portrait) and (max-width:600px){
-  #tagger .rotate{display:flex;position:absolute;inset:0;z-index:40;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;background:var(--bg)}
+  #tagger:not(.setup) .rotate{display:flex;position:absolute;inset:0;z-index:40;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;background:var(--bg)}
   #tagger .rotate .ph{width:46px;height:78px;border:3px solid var(--accent);border-radius:9px;animation:ruota 1.8s ease-in-out infinite}
   #tagger .rotate b{font-family:var(--f-display);font-size:1.5rem;letter-spacing:.04em;text-transform:uppercase}
 }
@@ -221,7 +258,7 @@ body.tagopen{overflow:hidden}
 .tsave.err{color:var(--bad);font-weight:600}
 .tmain{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:10px;padding:8px 10px}
 #tagger.setup .tmain{grid-template-columns:minmax(0,2.2fr) minmax(220px,1fr)}
-@media (orientation:portrait){.tmain{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}}
+@media (orientation:portrait){.tmain,#tagger.setup .tmain{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#tagger.setup .tside{max-height:38vh}}
 .pitch{container-type:size;position:relative;width:100%;height:100%;min-height:200px;background:var(--pitch);border:2px solid var(--pline);border-radius:6px;overflow:hidden;touch-action:manipulation}
 .pl{position:absolute;border:2px solid var(--pline)}
 .pl.half{left:50%;top:-2px;bottom:-2px;border-width:0 0 0 2px}
@@ -709,7 +746,11 @@ function renderSearch(){
       return `<td class="n">${fmtInd(ind,v)}${d}</td>`}).join("");
     const fq=+p.anno>=2005?` <span class="chip fq">${esc(String(p.anno).slice(2))}</span>`:"";
     return `<tr class="click" data-pid="${pid}" tabindex="0"><td class="pname">${esc(p.nome)}${fq}</td><td><span class="row" style="gap:8px;flex-wrap:nowrap;align-items:center">${badge(p.squadra)}${esc(p.squadra)}</span></td><td>${esc(roleOf(pid)||"—")}</td><td>${esc(posName(posOf(pid))||"—")}</td><td class="n">${esc(p.anno||"—")}</td><td class="n">${a.min}</td>${cells}</tr>`}).join("");
-  $("#results").innerHTML=`<div class="tablebox"><table><thead>${head}</thead><tbody>${body}</tbody></table></div><p class="note">Accanto a ogni valore, lo scarto rispetto alla media del suo ruolo. Clicca un giocatore per il profilo.</p>`;
+  const mbody=rows.slice(0,400).map(({pid,p,a})=>{
+    const chips=cols.map(k=>{const ind=INDK[k];const v=val(a,ind);const b=BENCH.role(ind,roleOf(pid));let cl="";if(v!=null&&b!=null&&b!==0){const good=ind.low?v<b:v>b;cl=good?"up":"down"}return `<span class="${cl}">${esc(ind.l)} <b>${fmtInd(ind,v)}</b></span>`}).join("");
+    const info=[p.squadra,posName(posOf(pid))||roleLabel(roleOf(pid)),p.anno].filter(Boolean).join(" · ");
+    return `<button type="button" class="mitem" data-pid="${pid}">${badge(p.squadra)}<span class="mi-main"><b>${esc(p.nome)}</b><small>${esc(info)}</small></span><span class="mi-st"><span class="${a.min?"":"z"}"><b>${a.min}</b><small>Min</small></span></span><span class="mi-x">${chips}</span></button>`}).join("");
+  $("#results").innerHTML=`<div class="mlist">${mbody}</div><div class="tablebox hide-m"><table><thead>${head}</thead><tbody>${body}</tbody></table></div><p class="note">Accanto a ogni valore, lo scarto rispetto alla media del suo ruolo. Clicca un giocatore per il profilo.</p>`;
 }
 
 /* ---------- profilo ---------- */
@@ -870,8 +911,11 @@ function renderRoster(){
   const CW={num:"w-num c",nome:"",ruolo:"w-role",pos:"w-pos",anno:"w-yr c",piede:"w-ft",pres:"w-pr c sep",min:"w-st c",gol:"w-st c",assist:"w-st c"};
   const cols=RCOLS.map(([k])=>`<col class="${CW[k].split(" ")[0]}">`).join("");
   const head=RCOLS.map(([k,l])=>`<th class="sort ${CW[k].split(" ").slice(1).join(" ")}" data-rs="${k}"${RSORT.k===k?` aria-sort="${RSORT.dir>0?"ascending":"descending"}"`:""}>${l}${RSORT.k===k?(RSORT.dir>0?" ↑":" ↓"):""}</th>`).join("");
+  const mlist=`<div class="mlist">${ps.map(([pid,p])=>{const a=AGG[pid]||{},nu=numFor(p,t),gone=p.squadra!==t;
+    const info=[roleLabel(p.ruolo),posName(posOf(pid)),p.anno,p.piede].filter(Boolean).join(" · ");
+    return `<button type="button" class="mitem${gone?" gone":""}" data-pid="${pid}"><span class="shirt">${nu!=null?esc(nu):"–"}</span><span class="mi-main"><b>${esc(p.nome)}</b><small>${esc(info)}</small>${gone?`<small>ceduto · ora ${esc(p.squadra)}</small>`:""}</span><span class="mi-st"><span class="${a.pres?"":"z"}"><b>${a.pres||0}${a.sub?`<small style="display:inline;font-size:.7rem"> (${a.sub})</small>`:""}</b><small>Pres.</small></span><span class="${a.min?"":"z"}"><b>${a.min||0}</b><small>Min</small></span></span></button>`}).join("")}</div>`;
   $("#roster").innerHTML=`<div class="row" style="margin-bottom:8px;align-items:center"><label for="rSort" class="label" style="margin:0">Ordina per</label><select id="rSort" style="width:auto">${RCOLS.map(([k,l])=>`<option value="${k}"${k===RSORT.k?" selected":""}>${k==="num"?"Numero di maglia":l==="Pres."?"Presenze":l==="Min"?"Minuti giocati":l}</option>`).join("")}</select><button type="button" class="ghost small" id="rDir">${RSORT.dir>0?"↑ Crescente":"↓ Decrescente"}</button></div>
-  <div class="tablebox"><table class="rt"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${ps.map(([pid,p])=>{const a=AGG[pid]||{},tt=a.tot||{};const st=(v,x)=>`<td class="c st${v?"":" z"}${x?" "+x:""}">${v||0}</td>`;const nu=numFor(p,t);
+  ${mlist}<div class="tablebox hide-m"><table class="rt"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${ps.map(([pid,p])=>{const a=AGG[pid]||{},tt=a.tot||{};const st=(v,x)=>`<td class="c st${v?"":" z"}${x?" "+x:""}">${v||0}</td>`;const nu=numFor(p,t);
     return `<tr class="click${p.squadra!==t?" gone":""}" data-pid="${pid}" tabindex="0"><td class="c">${nu!=null?`<span class="shirt">${esc(nu)}</span>`:""}</td><td class="pname">${esc(p.nome)}${p.squadra!==t?` <span class="chip">ceduto · ora ${esc(p.squadra)}</span>`:""}</td><td class="sec">${esc(roleLabel(p.ruolo))}</td><td class="sec">${esc(posName(posOf(pid))||"—")}</td><td class="c sec">${esc(p.anno||"—")}</td><td class="sec">${esc(p.piede||"—")}</td><td class="c st sep${a.pres?"":" z"}">${a.pres||0}${a.sub?` <span class="muted" style="font-weight:500">(${a.sub})</span>`:""}</td>${st(a.min)}${st(tt.gol)}${st(tt.assist)}</tr>`}).join("")}</tbody></table></div><p class="note">${ps.length} giocatori. Presenze totali, tra parentesi quelle da subentrato. Tocca l'intestazione di una colonna per ordinare; toccala di nuovo per invertire.</p>`;
 }
 async function teamReport(){
@@ -1374,11 +1418,11 @@ function renderGiornate(){
       :m.golCasa!=null?`<div class="score">${m.golCasa}–${m.golTrasf}</div>`:`<div class="score tbd">da giocare</div>`;
     const sides=CALAB.filter(t=>t===m.casa||t===m.trasferta).map(t=>{const c=coverage(m,t);
       const btn=c.k==="ok"?(c.id?`<button type="button" class="ghost small" data-gopen="${esc(c.id)}">Registro</button>`:""):c.k==="run"?`<button type="button" class="small" data-gopen="${esc(c.id)}">Riprendi</button>`:(canWrite?`<button type="button" class="small" data-gnew="${esc(id)}" data-team="${esc(t)}">Analizza ora</button>`:"");
-      const co=coachAt(t,m.giornata);return `<div class="cov"><span class="covt">${badge(t)}<span><b>${esc(t)}</b>${co?`<small class="muted">All. ${esc(co)}</small>`:""}</span></span><span class="chip ${c.k}">${c.l}</span>${btn}</div>`}).join("");
+      const co=coachAt(t,m.giornata);return `<div class="cov"><span class="covt tlink" data-goteam="${esc(t)}" role="link" tabindex="0" title="Apri la rosa">${badge(t)}<span><b>${esc(t)}</b>${co?`<small class="muted">All. ${esc(co)}</small>`:""}</span></span><span class="chip ${c.k}">${c.l}</span>${btn}</div>`}).join("");
     return `<article class="fix" data-mid="${esc(id)}">
-      <div class="tm${CALAB.includes(m.casa)?" cal":""}">${badge(m.casa,1)}<span>${esc(m.casa)}</span></div>
+      <div class="tm${CALAB.includes(m.casa)?" cal tlink":""}"${CALAB.includes(m.casa)?` data-goteam="${esc(m.casa)}" role="link" tabindex="0" title="Apri la rosa"`:""}>${badge(m.casa,1)}<span>${esc(m.casa)}</span></div>
       ${sc}
-      <div class="tm away${CALAB.includes(m.trasferta)?" cal":""}">${badge(m.trasferta,1)}<span>${esc(m.trasferta)}</span></div>
+      <div class="tm away${CALAB.includes(m.trasferta)?" cal tlink":""}"${CALAB.includes(m.trasferta)?` data-goteam="${esc(m.trasferta)}" role="link" tabindex="0" title="Apri la rosa"`:""}>${badge(m.trasferta,1)}<span>${esc(m.trasferta)}</span></div>
       ${scorersHTML(m)}
       <div class="meta"><span class="muted mono">${esc(fmtDate(m.data))}</span><div class="covs">${sides}</div>
 </div>
@@ -1386,7 +1430,10 @@ function renderGiornate(){
 }
 $("#gSel").addEventListener("change",e=>{GSEL=+e.target.value;GEDIT=null;renderGiornate()});
 $("#gStrip").addEventListener("click",e=>{const b=e.target.closest("[data-g]");if(!b)return;GSEL=+b.dataset.g;GEDIT=null;renderGiornate()});
+function goTeam(t){$("#rTeam").value=t;try{localStorage.setItem("og_team",t)}catch(err){}go("rose");window.scrollTo(0,0)}
+$("#gList").addEventListener("keydown",e=>{const g=e.target.closest("[data-goteam]");if(g&&e.key==="Enter")goTeam(g.dataset.goteam)});
 $("#gList").addEventListener("click",async e=>{const t=e.target;
+  const gt=t.closest("[data-goteam]");if(gt){goTeam(gt.dataset.goteam);return}
   if(t.dataset.redit){GEDIT=t.dataset.redit;renderGiornate();return}
   if(t.matches("[data-rno]")){GEDIT=null;renderGiornate();return}
   if(t.dataset.rsave){const h=$("#eH").value,a=$("#eA").value;
@@ -1555,13 +1602,13 @@ $("#addCrit").onclick=()=>{S.crit.push({k:"key_pass",c:"role",v:""});S.sort=null
 $("#resetF").onclick=()=>{$("#filters").reset();$("#fMin").value=270;S.crit=[];S.sort=null;renderCrits();renderSearch()};
 $("#results").addEventListener("click",e=>{
   const th=e.target.closest("th[data-s]");if(th){const k=th.dataset.s;S.sort=S.sort&&S.sort.k===k?{k,dir:-S.sort.dir}:{k,dir:k==="nome"?1:-1};renderSearch();return}
-  const tr=e.target.closest("tr[data-pid]");if(tr)openPlayer(tr.dataset.pid)});
+  const tr=e.target.closest("[data-pid]");if(tr)openPlayer(tr.dataset.pid)});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("tr[data-pid]"))openPlayer(e.target.dataset.pid)});
 const RDESC=["pres","min","gol","assist"];
 $("#roster").addEventListener("click",e=>{
   const th=e.target.closest("th[data-rs]");if(th){const k=th.dataset.rs;RSORT=RSORT.k===k?{k,dir:-RSORT.dir}:{k,dir:RDESC.includes(k)?-1:1};renderRoster();return}
   if(e.target.id==="rDir"){RSORT.dir=-RSORT.dir;renderRoster();return}
-  const tr=e.target.closest("tr[data-pid]");if(tr)openPlayer(tr.dataset.pid)});
+  const tr=e.target.closest("[data-pid]");if(tr)openPlayer(tr.dataset.pid)});
 $("#roster").addEventListener("change",e=>{if(e.target.id==="rSort"){const k=e.target.value;RSORT={k,dir:RDESC.includes(k)?-1:1};renderRoster()}});
 $("#backBtn").onclick=()=>go(S.back||"ricerca");
 
