@@ -102,7 +102,7 @@ tr.click{cursor:pointer}
 tbody tr.click:hover{background:var(--soft)}
 tbody tr.click:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .pname{font-weight:600}
-table.rt{table-layout:fixed;min-width:1080px}
+table.rt{table-layout:fixed;min-width:1160px}
 table.rt th,table.rt td{padding:10px 8px}
 table.rt th.c,table.rt td.c{text-align:center}
 table.rt col.w-num{width:56px}table.rt col.w-role{width:150px}table.rt col.w-pos{width:170px}table.rt col.w-yr{width:70px}table.rt col.w-ft{width:96px}table.rt col.w-st{width:76px}table.rt col.w-pr{width:96px}
@@ -428,7 +428,7 @@ nav.tabs a[hidden]{display:none}
           <div class="field"><label for="fRole">Ruolo</label><select id="fRole"></select></div>
         </div>
         <div class="row">
-          <div class="field"><label for="fPos">Posizione</label><select id="fPos"></select></div>
+          <div class="field"><label for="fPos">Più utilizzato come</label><select id="fPos"></select></div>
         </div>
         <div class="row">
           <div class="field"><label for="fYear">Nati dal</label><input id="fYear" type="number" min="1980" max="2012" placeholder="es. 2006"></div>
@@ -692,12 +692,12 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const norm=s=>String(s??"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/g,"");
 const GENERIC=["","difesa","difensore","centrocampo","centrocampista","attacco","attaccante"];
-const POS2ROLE={POR:"POR",TD:"TER",TS:"TER",DC:"DC",BR:"DC",BRD:"DC",BRS:"DC",QD:"EST",QS:"EST",ED:"EST",ES:"EST",AD:"EST",AS:"EST",REG:"CEN",MED:"CEN",MEZ:"CEN",CC:"CEN",TRQ:"TRQ",SP:"TRQ",PC:"ATT"};
-const POSBYROLE={POR:["POR"],DC:["DC","BRD","BRS"],TER:["TD","TS"],CEN:["REG","MED","MEZ","CC"],EST:["ED","ES","QD","QS","AD","AS"],TRQ:["TRQ","SP"],ATT:["PC"]};
-const posName=k=>({POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",BRD:"Braccetto destro",BRS:"Braccetto sinistro",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Play",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"})[k]||k||"";
-/* posizione principale: quella scelta nella scheda, altrimenti quella con più minuti negli schieramenti */
-function posOf(pid){const p=S.players[pid]||{};return p.posizione||topPos(pid)}
-function posOpts(r,cur){return `<option value="">Automatica</option>`+(POSBYROLE[r]||[]).map(k=>`<option value="${k}"${k===cur?" selected":""}>${esc(posName(k))}</option>`).join("")}
+const POS2ROLE={POR:"POR",TD:"TER",TS:"TER",DC:"DC",DCD:"DC",DCS:"DC",BR:"DC",BRD:"DC",BRS:"DC",QD:"EST",QS:"EST",ED:"EST",ES:"EST",AD:"EST",AS:"EST",REG:"CEN",MED:"CEN",MEZ:"CEN",CC:"CEN",TRQ:"TRQ",SP:"TRQ",PC:"ATT"};
+const POSBYROLE={POR:["POR"],DC:["DCD","DCS","DC","BRD","BRS"],TER:["TD","TS"],CEN:["REG","MED","MEZ","CC"],EST:["ED","ES","QD","QS","AD","AS"],TRQ:["TRQ","SP"],ATT:["PC"]};
+const posName=k=>({POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DCD:"Centrale destro",DCS:"Centrale sinistro",DC:"Centrale (difesa a 3)",BR:"Braccetto",BRD:"Braccetto destro",BRS:"Braccetto sinistro",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Play",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"})[k]||k||"";
+/* posizione di maggior utilizzo: quella in cui è stato schierato più volte; se non ha ancora partite, quella scritta nella scheda */
+function posOf(pid){const p=S.players[pid]||{};return topPos(pid)||p.posizione||null}
+function posOpts(r,cur){return `<option value="">—</option>`+(POSBYROLE[r]||[]).map(k=>`<option value="${k}"${k===cur?" selected":""}>${esc(posName(k))}</option>`).join("")}
 /* posizione in cui è stato schierato più volte; a parità, quella con più minuti */
 function topPos(pid){const a=AGG[pid];if(!a)return null;const ap=a.posApp||{},mn=a.posMin||{};const ks=[...new Set([...Object.keys(ap),...Object.keys(mn)])].filter(k=>(ap[k]||0)>0||(mn[k]||0)>0);if(!ks.length)return null;ks.sort((x,y)=>(ap[y]||0)-(ap[x]||0)||(mn[y]||0)-(mn[x]||0));return ks[0]}
 function roleOf(pid){const p=S.players[pid]||{};const gen=GENERIC.includes(String(p.ruolo_dettaglio||"").trim().toLowerCase())||!p.ruolo;const tp=topPos(pid);return gen&&tp?POS2ROLE[tp]||p.ruolo:p.ruolo}
@@ -714,8 +714,11 @@ const S={players:{},matches:{},gloss:{},view:"ricerca",pid:null,crit:[],sort:nul
 let AGG={},BENCH=null;
 /* statistiche separate per squadra: servono alle rose, dove un giocatore trasferito mostra solo quello che ha fatto con quella squadra */
 const teamAgg=(a,t)=>{a.byTeam=a.byTeam||{};return a.byTeam[t||"?"]||(a.byTeam[t||"?"]={min:0,pres:0,sub:0,tot:{}})};
+let TEAMMIN={};
+const pctMin=(m,tot)=>tot?Math.round((m||0)/tot*100)+"%":"—";
 function aggregate(){
-  AGG={};
+  AGG={};TEAMMIN={};
+  for(const m of Object.values(S.matches)){const ts=new Set(Object.values(m.righe||{}).map(r=>r.squadra).filter(Boolean));ts.forEach(t=>{TEAMMIN[t]=(TEAMMIN[t]||0)+(+((m.durata||{})[t])||90)})}
   const ms=Object.values(S.matches).sort((a,b)=>(a.giornata||0)-(b.giornata||0));
   for(const m of ms){for(const [pid,r] of Object.entries(m.righe||{})){
     const a=AGG[pid]||(AGG[pid]={min:0,pres:0,sub:0,tot:{},log:[]});
@@ -801,7 +804,7 @@ function renderSearch(){
   if(!total){$("#results").innerHTML=`<div class="panel empty"><h3>Il database è vuoto</h3><p>Inserisci le rose nella scheda Rose oppure carica direttamente una partita: i giocatori nuovi vengono creati in automatico.</p><p><button type="button" onclick="go('partite')">Carica la prima partita</button></p></div>`;return}
   if(!rows.length){$("#results").innerHTML=`<div class="panel empty"><h3>Nessun giocatore con questi filtri</h3><p>Abbassa i minuti minimi o togli un criterio.${Object.keys(S.matches).length?"":" Non ci sono ancora partite caricate, quindi tutti hanno 0 minuti."}</p></div>`;return}
   const arrow=k=>sk.k===k?(sk.dir>0?" ↑":" ↓"):"";
-  const head=`<tr><th class="sort" data-s="nome">Giocatore${arrow("nome")}</th><th>Squadra</th><th>Ruolo</th><th>Posizione</th><th class="sort n" data-s="anno">Anno${arrow("anno")}</th><th class="sort n" data-s="min">Min${arrow("min")}</th>${cols.map(k=>`<th class="sort n" data-s="${k}">${esc(INDK[k].l)}${arrow(k)}</th>`).join("")}</tr>`;
+  const head=`<tr><th class="sort" data-s="nome">Giocatore${arrow("nome")}</th><th>Squadra</th><th>Ruolo</th><th>Più utilizzato</th><th class="sort n" data-s="anno">Anno${arrow("anno")}</th><th class="sort n" data-s="min">Min${arrow("min")}</th>${cols.map(k=>`<th class="sort n" data-s="${k}">${esc(INDK[k].l)}${arrow(k)}</th>`).join("")}</tr>`;
   const body=rows.slice(0,400).map(({pid,p,a})=>{
     const cells=cols.map(k=>{const ind=INDK[k];const v=val(a,ind);const b=BENCH.role(ind,roleOf(pid));
       let d="";if(v!=null&&b!=null&&b!==0){const diff=(v-b)/Math.abs(b)*100;const good=ind.low?diff<0:diff>0;d=`<span class="delta ${good?"up":"down"}">${diff>0?"+":""}${Math.round(diff)}%</span>`}
@@ -837,6 +840,7 @@ function renderProfile(){
         <div><span class="label">Piede</span><b>${esc(p.piede||"—")}</b></div>
         <div><span class="label" title="Presenze totali; tra parentesi quante da subentrato. Contano dallo schieramento iniziale e dai cambi, anche prima di inviare la partita.">Presenze (da subentrato)</span><b>${a.pres}${a.sub?` <span class="muted" style="font-size:.7em">(${a.sub})</span>`:""}</b>${a.byTeam&&Object.keys(a.byTeam).length>1?`<small class="muted" style="display:block;font-size:.72rem;margin-top:3px">${Object.entries(a.byTeam).filter(([,v])=>v.pres).map(([t,v])=>`${esc(t)} ${v.pres}${v.sub?` (${v.sub})`:""}`).join(" · ")}</small>`:""}</div>
         <div><span class="label">Minuti</span><b>${a.min}</b></div>
+        <div><span class="label" title="Minuti giocati sul totale dei minuti delle sue squadre nelle partite inviate (recuperi compresi)">% minuti</span><b>${(()=>{const tm=Object.entries(a.byTeam||{}).filter(([,v])=>v.pres||v.min).reduce((x,[t])=>x+(TEAMMIN[t]||0),0);return pctMin(a.min,tm)})()}</b></div>
         <div><span class="label">Gol</span><b>${a.tot.gol||0}</b></div>
         <div><span class="label">xG</span><b>${fmt(a.tot.xg||0)}</b></div>
       </div>
@@ -870,7 +874,7 @@ function renderProfile(){
         <div class="field" style="grid-column:span 4"><label for="eName">Nome e cognome</label><input id="eName" value="${esc(p.nome||"")}" autocomplete="off" ${canWrite?"":"disabled"}></div>
         <div class="field" style="grid-column:span 2"><label for="eYear">Anno</label><input id="eYear" type="number" value="${esc(p.anno||"")}" ${canWrite?"":"disabled"}></div>
         <div class="field" style="grid-column:span 3"><label for="eRole">Ruolo</label><select id="eRole" ${canWrite?"":"disabled"}>${ROLES.map(r=>`<option value="${r[0]}"${r[0]===p.ruolo?" selected":""}>${r[1]}</option>`).join("")}</select></div>
-        <div class="field" style="grid-column:span 3"><label for="ePos">Posizione</label><select id="ePos" ${canWrite?"":"disabled"}>${posOpts(p.ruolo,p.posizione)}</select></div>
+        <div class="field" style="grid-column:span 3"><label for="ePos" title="Si usa finché il giocatore non ha partite: poi conta dove viene schierato più spesso">Posizione naturale</label><select id="ePos" ${canWrite?"":"disabled"}>${posOpts(p.ruolo,p.posizione)}</select></div>
         <div class="field" style="grid-column:span 4"><label for="eTeam">Squadra</label><select id="eTeam" ${canWrite?"":"disabled"}>${TEAMS.map(t=>`<option${t===p.squadra?" selected":""}>${t}</option>`).join("")}<option value="__altro"${p.squadra&&!TEAMS.includes(p.squadra)?" selected":""}>Fuori dal girone / svincolato…</option></select></div>
         <div class="field" style="grid-column:span 2"><label for="eNum" title="Numero alla ${esc(p.squadra)}">Numero</label><input id="eNum" type="number" inputmode="numeric" min="1" max="99" value="${esc(numFor(p,p.squadra)??"")}" ${canWrite?"":"disabled"}></div>
         <div class="field" style="grid-column:span 6" id="eOtherWrap" ${p.squadra&&!TEAMS.includes(p.squadra)?"":"hidden"}><label for="eOther">Nuova squadra</label><input id="eOther" placeholder="es. Cosenza, svincolato" value="${esc(p.squadra&&!TEAMS.includes(p.squadra)?p.squadra:"")}" ${canWrite?"":"disabled"}></div>
@@ -963,7 +967,7 @@ async function saveFile(filename,buf){
 
 /* ---------- rose ---------- */
 let RSORT={k:"ruolo",dir:1};
-const RCOLS=[["num","N.","n"],["nome","Giocatore",""],["ruolo","Ruolo",""],["pos","Posizione",""],["anno","Anno","n"],["piede","Piede",""],["pres","Pres.","n"],["min","Min","n"],["gol","Gol","n"],["assist","Assist","n"]];
+const RCOLS=[["num","N.","n"],["nome","Giocatore",""],["ruolo","Ruolo",""],["pos","Più utilizzato",""],["anno","Anno","n"],["piede","Piede",""],["pres","Pres.","n"],["min","Min","n"],["pct","% Min","n"],["gol","Gol","n"],["assist","Assist","n"]];
 function renderRoster(){
   const t=$("#rTeam").value;const ps=Object.entries(S.players).filter(([,p])=>p.squadra===t||(p.ex||[]).includes(t));
   const nGone=ps.filter(([,p])=>p.squadra!==t).length;const cur=ps.filter(([,p])=>p.squadra===t);const uc=y=>cur.filter(([,p])=>y===2008?+p.anno>=2008:+p.anno===y).length;
@@ -975,20 +979,20 @@ function renderRoster(){
   const key=([pid,p])=>{const a=TA(pid);switch(RSORT.k){
     case"num":return numFor(p,t);case"nome":return sortName(p.nome);case"ruolo":return ri(p.ruolo);
     case"pos":{const k=posOf(pid);return k?pord.indexOf(k):null}case"anno":return +p.anno||null;case"piede":return p.piede||null;
-    case"pres":return a.pres||0;case"min":return a.min||0;case"gol":return (a.tot||{}).gol||0;case"assist":return (a.tot||{}).assist||0}};
+    case"pct":return TEAMMIN[t]?(a.min||0)/TEAMMIN[t]:0;case"pres":return a.pres||0;case"min":return a.min||0;case"gol":return (a.tot||{}).gol||0;case"assist":return (a.tot||{}).assist||0}};
   ps.sort((x,y)=>{const gx=x[1].squadra!==t,gy=y[1].squadra!==t;if(gx!==gy)return gx?1:-1;const a=key(x),b=key(y);let c=0;
     if(a==null&&b!=null)return 1;if(b==null&&a!=null)return -1;
     if(a!=null&&b!=null)c=typeof a==="string"?a.localeCompare(b):a-b;
     return c*RSORT.dir||ri(x[1].ruolo)-ri(y[1].ruolo)||norm(x[1].nome).localeCompare(norm(y[1].nome))});
-  const CW={num:"w-num c",nome:"",ruolo:"w-role",pos:"w-pos",anno:"w-yr c",piede:"w-ft",pres:"w-pr c sep",min:"w-st c",gol:"w-st c",assist:"w-st c"};
+  const CW={num:"w-num c",nome:"",ruolo:"w-role",pos:"w-pos",anno:"w-yr c",piede:"w-ft",pres:"w-pr c sep",min:"w-st c",pct:"w-st c",gol:"w-st c",assist:"w-st c"};
   const cols=RCOLS.map(([k])=>`<col class="${CW[k].split(" ")[0]}">`).join("");
-  const head=RCOLS.map(([k,l])=>`<th class="sort ${CW[k].split(" ").slice(1).join(" ")}" data-rs="${k}"${k==="pres"?` title="Presenze totali; tra parentesi quante da subentrato. Contano dallo schieramento iniziale e dai cambi, anche prima di inviare la partita."`:""}${RSORT.k===k?` aria-sort="${RSORT.dir>0?"ascending":"descending"}"`:""}>${l}${RSORT.k===k?(RSORT.dir>0?" ↑":" ↓"):""}</th>`).join("");
+  const head=RCOLS.map(([k,l])=>`<th class="sort ${CW[k].split(" ").slice(1).join(" ")}" data-rs="${k}"${k==="pct"?` title="Minuti giocati sul totale dei minuti della squadra nelle partite inviate (recuperi compresi)"`:""}${k==="pres"?` title="Presenze totali; tra parentesi quante da subentrato. Contano dallo schieramento iniziale e dai cambi, anche prima di inviare la partita."`:""}${RSORT.k===k?` aria-sort="${RSORT.dir>0?"ascending":"descending"}"`:""}>${l}${RSORT.k===k?(RSORT.dir>0?" ↑":" ↓"):""}</th>`).join("");
   const mlist=`<div class="mlist">${ps.map(([pid,p])=>{const a=TA(pid),nu=numFor(p,t),gone=p.squadra!==t;
     const info=[roleLabel(p.ruolo),posName(posOf(pid)),p.anno,p.piede].filter(Boolean).join(" · ");
-    return `<button type="button" class="mitem${gone?" gone":""}" data-pid="${pid}"><span class="shirt">${nu!=null?esc(nu):"–"}</span><span class="mi-main"><b>${esc(p.nome)}${uTag(p.anno)}</b><small>${esc(info)}</small>${gone?`<small>ceduto · ora ${esc(p.squadra)}</small>`:""}</span><span class="mi-st"><span class="${a.pres?"":"z"}"><b>${a.pres||0}${a.sub?`<small style="display:inline;font-size:.7rem"> (${a.sub})</small>`:""}</b><small title="Presenze totali; tra parentesi quante da subentrato. Contano dallo schieramento iniziale e dai cambi, anche prima di inviare la partita.">Pres.</small></span><span class="${a.min?"":"z"}"><b>${a.min||0}</b><small>Min</small></span></span></button>`}).join("")}</div>`;
+    return `<button type="button" class="mitem${gone?" gone":""}" data-pid="${pid}"><span class="shirt">${nu!=null?esc(nu):"–"}</span><span class="mi-main"><b>${esc(p.nome)}${uTag(p.anno)}</b><small>${esc(info)}</small>${gone?`<small>ceduto · ora ${esc(p.squadra)}</small>`:""}</span><span class="mi-st"><span class="${a.pres?"":"z"}"><b>${a.pres||0}${a.sub?`<small style="display:inline;font-size:.7rem"> (${a.sub})</small>`:""}</b><small title="Presenze totali; tra parentesi quante da subentrato. Contano dallo schieramento iniziale e dai cambi, anche prima di inviare la partita.">Pres.</small></span><span class="${a.min?"":"z"}"><b>${a.min||0}</b><small>Min</small></span><span class="${a.min?"":"z"}"><b>${pctMin(a.min,TEAMMIN[t])}</b><small>% Min</small></span></span></button>`}).join("")}</div>`;
   $("#roster").innerHTML=`<div class="row" style="margin-bottom:8px;align-items:center"><label for="rSort" class="label" style="margin:0">Ordina per</label><select id="rSort" style="width:auto">${RCOLS.map(([k,l])=>`<option value="${k}"${k===RSORT.k?" selected":""}>${k==="num"?"Numero di maglia":l==="Pres."?"Presenze":l==="Min"?"Minuti giocati":l}</option>`).join("")}</select><button type="button" class="ghost small" id="rDir">${RSORT.dir>0?"↑ Crescente":"↓ Decrescente"}</button></div>
   ${mlist}<div class="tablebox hide-m"><table class="rt"><colgroup>${cols}</colgroup><thead><tr>${head}</tr></thead><tbody>${ps.map(([pid,p])=>{const a=TA(pid),tt=a.tot||{};const st=(v,x)=>`<td class="c st${v?"":" z"}${x?" "+x:""}">${v||0}</td>`;const nu=numFor(p,t);
-    return `<tr class="click${p.squadra!==t?" gone":""}" data-pid="${pid}" tabindex="0"><td class="c">${nu!=null?`<span class="shirt">${esc(nu)}</span>`:""}</td><td class="pname">${esc(p.nome)}${uTag(p.anno)}${p.squadra!==t?` <span class="chip">ceduto · ora ${esc(p.squadra)}</span>`:""}</td><td class="sec">${esc(roleLabel(p.ruolo))}</td><td class="sec">${esc(posName(posOf(pid))||"—")}</td><td class="c sec">${esc(p.anno||"—")}</td><td class="sec">${esc(p.piede||"—")}</td><td class="c st sep${a.pres?"":" z"}">${a.pres||0}${a.sub?` <span class="muted" style="font-weight:500">(${a.sub})</span>`:""}</td>${st(a.min)}${st(tt.gol)}${st(tt.assist)}</tr>`}).join("")}</tbody></table></div><p class="note">${ps.length} giocatori. Presenze totali, tra parentesi quelle da subentrato. Tocca l'intestazione di una colonna per ordinare; toccala di nuovo per invertire.</p>`;
+    return `<tr class="click${p.squadra!==t?" gone":""}" data-pid="${pid}" tabindex="0"><td class="c">${nu!=null?`<span class="shirt">${esc(nu)}</span>`:""}</td><td class="pname">${esc(p.nome)}${uTag(p.anno)}${p.squadra!==t?` <span class="chip">ceduto · ora ${esc(p.squadra)}</span>`:""}</td><td class="sec">${esc(roleLabel(p.ruolo))}</td><td class="sec">${esc(posName(posOf(pid))||"—")}</td><td class="c sec">${esc(p.anno||"—")}</td><td class="sec">${esc(p.piede||"—")}</td><td class="c st sep${a.pres?"":" z"}">${a.pres||0}${a.sub?` <span class="muted" style="font-weight:500">(${a.sub})</span>`:""}</td>${st(a.min)}<td class="c st${a.min?"":" z"}" title="Minuti giocati sul totale dei minuti della squadra (recuperi compresi)">${pctMin(a.min,TEAMMIN[t])}</td>${st(tt.gol)}${st(tt.assist)}</tr>`}).join("")}</tbody></table></div><p class="note">${ps.length} giocatori. Presenze totali, tra parentesi quelle da subentrato. Tocca l'intestazione di una colonna per ordinare; toccala di nuovo per invertire.</p>`;
 }
 async function teamReport(){
   const t=$("#rTeam").value;const B=bench(+$("#fMin").value||0);
@@ -1010,8 +1014,8 @@ function renderGloss(){
 }
 
 /* ================= RILEVAZIONE (pulsantiera) ================= */
-const POS={POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DC:"Difensore centrale",BR:"Braccetto",BRD:"Braccetto destro",BRS:"Braccetto sinistro",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Play",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"};
-const B4=[["POR",6,50],["TS",24,12],["DC",21,37],["DC",21,63],["TD",24,88]],B3=[["POR",6,50],["BRS",22,22],["DC",19,50],["BRD",22,78]];
+const POS={POR:"Portiere",TD:"Terzino destro",TS:"Terzino sinistro",DCD:"Centrale destro",DCS:"Centrale sinistro",DC:"Centrale (difesa a 3)",BR:"Braccetto",BRD:"Braccetto destro",BRS:"Braccetto sinistro",QD:"Quinto destro",QS:"Quinto sinistro",REG:"Play",MED:"Mediano",MEZ:"Mezzala",CC:"Centrocampista (a due)",ED:"Esterno destro",ES:"Esterno sinistro",TRQ:"Trequartista",AD:"Ala destra",AS:"Ala sinistra",SP:"Seconda punta",PC:"Punta centrale"};
+const B4=[["POR",6,50],["TS",24,12],["DCS",21,37],["DCD",21,63],["TD",24,88]],B3=[["POR",6,50],["BRS",22,22],["DC",19,50],["BRD",22,78]];
 const FORM={
  "4-3-3":[...B4,["MEZ",50,25],["REG",41,50],["MEZ",50,75],["AS",76,15],["PC",83,50],["AD",76,85]],
  "4-4-2":[...B4,["ES",52,12],["CC",46,37],["CC",46,63],["ED",52,88],["PC",80,37],["PC",80,63]],
@@ -1143,10 +1147,17 @@ function underCheck(pids){const pool=pids.filter(Boolean).map(p=>({p,y:uYear(p)}
 function underHTML(pids){const u=underCheck(pids);const ok=UNDER.every(t=>u[t]);
   return `<span class="ucheck${ok?" ok":" ko"}" title="${ok?"Regola under rispettata":"Manca un under in campo"}">${UNDER.map(t=>`<span class="${u[t]?"y":"n"}">${u[t]?"✓":"✗"} ${String(t).slice(2)}</span>`).join("")}</span>`}
 /* vecchie sessioni: "BR" diventa braccetto destro o sinistro in base al lato del campo */
-function fixBR(slots){(slots||[]).forEach(sl=>{if(sl.pos==="BR")sl.pos=sl.l<50?"BRS":"BRD"})}
+function fixBR(slots){const has3=(slots||[]).some(x=>x.pos==="BR"||x.pos==="BRS"||x.pos==="BRD");(slots||[]).forEach(sl=>{if(sl.pos==="BR")sl.pos=sl.l<50?"BRS":"BRD";else if(sl.pos==="DC"&&!has3&&Math.abs(sl.l-50)>5)sl.pos=sl.l<50?"DCS":"DCD"})}
 function normSess(s){if(!s)return s;fixBR(s.lineup&&s.lineup.slots);(s.log||[]).forEach(e=>{if(e.t==="mod")fixBR(e.slots)});return s}
+/* ---------- tempo reale: 45' + recupero 1° tempo + 45' + recupero 2° tempo ---------- */
+const rec=(s,k)=>Math.max(0,+(s&&s[k])||0);
+function durata(s){return (s.rec1!=null||s.rec2!=null)?90+rec(s,"rec1")+rec(s,"rec2"):(+s.fine||90)}
+/* minuto scritto dall'utente (es. 67, "45+2", "90+3") -> minuti reali trascorsi */
+function realMin(s,m){const t=String(m).trim();const mm=t.match(/^(\d+)\s*\+\s*(\d+)$/);const r1=rec(s,"rec1");
+  if(mm){const a=+mm[1],b=+mm[2];return a<=45?Math.min(45,a)+Math.min(b,r1||b):a+r1+b}
+  const v=+t;if(isNaN(v))return null;return v<=45?v:v+r1}
 function computeSess(s){normSess(s);
-  const fine=+s.fine||90,R={};
+  const fine=durata(s),R={};
   const row=pid=>R[pid]||(R[pid]={min:0,tot:{},pos:{},in:null,out:null,tit:false});
   const bump=(o,k)=>{o[k]=(o[k]||0)+1};
   const add=(pid,k,key)=>{if(!pid)return;const r=row(pid);bump(r.tot,k);if(key){const p=r.pos[key]||(r.pos[key]={min:0,tot:{}});bump(p.tot,k)}};
@@ -1156,8 +1167,11 @@ function computeSess(s){normSess(s);
   const stop=(pid,m)=>{const o=on[pid];if(!o)return;const d=Math.max(0,m-o.since);const r=row(pid);r.min+=d;if(o.key){const p=r.pos[o.key]||(r.pos[o.key]={min:0,tot:{}});p.min+=d}r.out=m;delete on[pid]};
   s.lineup.slots.forEach(sl=>{if(sl.pid){start(sl.pid,0,sl.pos+"@"+s.lineup.modulo);row(sl.pid).tit=true}});
   const L=s.log;
-  const nextEv=i=>{for(let j=i+1;j<L.length;j++){if(L[j].t==="mk")continue;return L[j]}return null};
-  const mm=(e,i)=>e.m!=null&&e.m!==""?+e.m:Math.round(i/Math.max(1,L.length)*fine);
+  const nextEv=i=>{for(let j=i+1;j<L.length;j++){if(L[j].t==="mk"||L[j].t==="ht")continue;return L[j]}return null};
+  const H=L.findIndex(e=>e.t==="ht"),T1=45+rec(s,"rec1");
+  const mm=(e,i)=>{if(e.m!=null&&e.m!==""){const v=realMin(s,e.m);if(v!=null)return Math.min(fine,v)}
+    if(H<0)return Math.round(i/Math.max(1,L.length)*fine);
+    return i<H?Math.round(i/Math.max(1,H)*T1):Math.round(T1+(i-H)/Math.max(1,L.length-H)*(fine-T1))};
   replay(s,null,(e,i,slots,mod)=>{
     const k=pid=>keyOf(slots,mod,pid);
     if(e.t==="p"){add(e.a,"pass_tot",k(e.a));add(e.a,"pass_ok",k(e.a));add(e.b,"pass_ric",k(e.b));if(e.kp)add(e.a,"key_pass",k(e.a));if(e.dir==="f")add(e.a,"pass_av",k(e.a));if(e.dir==="b")add(e.a,"pass_ind",k(e.a));
@@ -1181,6 +1195,7 @@ function code(s,e){
   if(e.t==="mod")return `${mt}MODULO ${e.mod}`;
   if(e.t==="red")return `${mt}ROSSO ${numOf(s,e.a)}`;
   if(e.t==="mk")return `SEGNALIBRO`;
+  if(e.t==="ht")return `INTERVALLO${s.rec1!=null?" (+"+rec(s,"rec1")+")":""}`;
   return "?";
 }
 function descr(s,e){
@@ -1191,6 +1206,7 @@ function descr(s,e){
   if(e.t==="mod")return `Nuovo modulo ${e.mod}`;
   if(e.t==="red")return `Espulso ${surname(e.a)}`;
   if(e.t==="mk")return e.x||"";
+  if(e.t==="ht")return `Fine primo tempo${s.rec1!=null?`, recupero ${rec(s,"rec1")}'`:""}`;
   return "";
 }
 
@@ -1296,7 +1312,7 @@ function renderSetupSide(){
 }
 function renderEventSide(){
   const s=T.s;
-  const bar=`<div class="arow"><button type="button" class="ghost" data-a="undo">↶ Annulla</button><button type="button" class="ghost" data-a="sub">Cambio</button><button type="button" class="ghost" data-a="pos">Ruolo</button><button type="button" class="ghost" data-a="mod">Modulo</button><button type="button" class="ghost" data-a="red">Rosso</button><button type="button" class="ghost" data-a="mk">Segnalibro</button><button type="button" class="ghost" data-a="reg">Registro</button><button type="button" data-a="end">Fine</button></div>`;
+  const bar=`<div class="arow"><button type="button" class="ghost" data-a="undo">↶ Annulla</button><button type="button" class="ghost" data-a="sub">Cambio</button><button type="button" class="ghost" data-a="pos">Ruolo</button><button type="button" class="ghost" data-a="mod">Modulo</button><button type="button" class="ghost" data-a="red">Rosso</button><button type="button" class="ghost" data-a="ht">Intervallo</button><button type="button" class="ghost" data-a="mk">Segnalibro</button><button type="button" class="ghost" data-a="reg">Registro</button><button type="button" data-a="end">Fine</button></div>`;
   const grid=`<div class="egrid">${EVB.map(b=>b.g?`<span class="label sep">${b.g}</span>`:`<button type="button" class="eb ${b.cl||""}" data-ev="${b.c}">${esc(b.l)}</button>`).join("")}</div>`;
   $("#tside").innerHTML=bar+grid;
 }
@@ -1359,6 +1375,7 @@ $("#tside").addEventListener("click",e=>{
   else if(a==="mk")openMark();
   else if(a==="reg"){T.regOpen=true;openRegistro()}
   else if(a==="end")openEnd();
+  else if(a==="ht")openHalf();
 });
 
 /* --- fogli --- */
@@ -1462,7 +1479,7 @@ function renderRegistro(){
     if(ed){if(e.t==="p")edit=`<div class="ed"><select data-f="a">${popt(e.a)}</select><span>→</span><select data-f="b">${popt(e.b)}</select><label class="row" style="gap:4px;align-items:center;flex:0 0 auto"><input type="checkbox" data-f="kp" style="width:auto"${e.kp?" checked":""}>KP</label><select data-f="dir"><option value=""${!e.dir?" selected":""}>Orizzontale</option><option value="f"${e.dir==="f"?" selected":""}>In avanti</option><option value="b"${e.dir==="b"?" selected":""}>All'indietro</option></select><button type="button" class="small" data-save="${i}">Salva</button></div>`;
       else if(e.t==="e")edit=`<div class="ed"><select data-f="a">${e.c==="GS"?`<option value="">—</option>`:""}${popt(e.a)}</select><select data-f="c">${EVB.filter(b=>b.c&&!["KP","AV","IN"].includes(b.c)).map(b=>`<option value="${b.c}"${b.c===e.c?" selected":""}>${esc(b.l)}</option>`).join("")}</select><button type="button" class="small" data-save="${i}">Salva</button></div>`;
       else if(e.t==="mk")edit=`<div class="ed"><input data-f="x" value="${esc(e.x)}"><button type="button" class="small" data-save="${i}">Salva</button></div>`;
-      else edit=`<div class="ed"><label class="field" style="flex:0 0 100px"><span class="muted">Minuto (facoltativo)</span><input type="number" data-f="m" value="${esc(e.m??"")}"></label><button type="button" class="small" data-save="${i}">Salva</button></div>`}
+      else edit=`<div class="ed"><label class="field" style="flex:0 0 100px"><span class="muted">Minuto (es. 67 o 45+2)</span><input type="text" inputmode="text" data-f="m" value="${esc(e.m??"")}"></label><button type="button" class="small" data-save="${i}">Salva</button></div>`}
     return `<div class="ri${timed?" timed":""}${T.ins===i+1?" ins":""}" data-i="${i}"><span class="mono muted">#${i+1}</span><span><span class="mono"><b>${esc(code(s,e))}</b></span> <span class="muted">${esc(descr(s,e))}</span></span>
     <span class="row" style="gap:4px;flex-wrap:nowrap" data-row="${i}">${canWrite?`<button type="button" class="ghost small" data-edit="${e.id}">Modifica</button><button type="button" class="ghost small" data-ins="${i}">Inserisci dopo</button><button type="button" class="danger small" data-del="${i}">Elimina</button>`:""}</span>${edit}</div>`}).join(""):`<p class="muted">Ancora nessun evento.</p>`}</div>`;
 }
@@ -1476,27 +1493,40 @@ function regClick(e){
   if(t.matches("[data-delno]")){renderRegistro();return}
   if(t.dataset.delok!=null){const i=+t.dataset.delok;s.log.splice(i,1);if(T.ins!=null&&i<T.ins)T.ins--;persist();renderRegistro();renderTagger();return}
   if(t.dataset.save!=null){const i=+t.dataset.save,e2=s.log[i],row=t.closest(".ri");
-    row.querySelectorAll("[data-f]").forEach(f=>{const k=f.dataset.f;if(k==="kp")e2.kp=f.checked?1:0;else if(k==="dir")e2.dir=f.value||null;else if(k==="m")e2.m=f.value===""?null:+f.value;else if(k==="a")e2.a=f.value||null;else e2[k]=f.value});
+    row.querySelectorAll("[data-f]").forEach(f=>{const k=f.dataset.f;if(k==="kp")e2.kp=f.checked?1:0;else if(k==="dir")e2.dir=f.value||null;else if(k==="m"){const v=f.value.trim();e2.m=v===""?null:(/^\d+$/.test(v)?+v:v)}else if(k==="a")e2.a=f.value||null;else e2[k]=f.value});
     if(e2.t==="e"&&e2.c!=="GS"&&!e2.a){toast("Scegli il giocatore");return}
     T.editing=null;persist();renderRegistro();renderTagger();toast("Riga aggiornata")}
 }
 
 /* --- fine, export, invio --- */
+function recField(id,label,val){return `<div class="field" style="max-width:190px"><label for="${id}">${label}</label><input id="${id}" type="number" inputmode="numeric" min="0" max="20" placeholder="es. 2" value="${val==null?"":esc(val)}"></div>`}
+function openHalf(){
+  const s=T.s,has=s.log.some(e=>e.t==="ht");
+  openSheet(`<div class="row" style="justify-content:space-between;align-items:center"><h3>Fine primo tempo</h3><button type="button" class="ghost small" data-close>Annulla</button></div>
+  <p class="note" style="margin:0">Segna l'intervallo in questo punto del registro e scrivi i minuti di recupero del primo tempo. Servono a calcolare i minuti giocati reali.${has?" L'intervallo è già segnato: puoi correggere il recupero.":""}</p>
+  ${recField("rec1In","Recupero 1° tempo (minuti)",s.rec1)}
+  <div class="row"><button type="button" data-htok>${has?"Salva recupero":"Segna intervallo"}</button></div>`);
+  setTimeout(()=>{const i=$("#rec1In");if(i)i.focus()},50);
+  $("#sheetCard").onclick=e=>{if(!e.target.matches("[data-htok]"))return;const v=$("#rec1In").value;s.rec1=v===""?null:Math.max(0,+v);
+    closeSheet();if(!has)pushEntry({t:"ht"});else{persist();renderTagger()}toast(`Intervallo${s.rec1!=null?" · recupero "+s.rec1+"'":""}`)};
+}
 function openEnd(){
   const s=T.s,R=computeSess(s);const nP=Object.keys(R).length,nE=s.log.filter(e=>e.t==="p"||e.t==="e").length;
   openSheet(`<div class="row" style="justify-content:space-between;align-items:center"><h3>Fine partita</h3><button type="button" class="ghost small" data-close>Torna a taggare</button></div>
-  <p class="note" style="margin:0">${nE} eventi · ${nP} giocatori. Minuto finale facoltativo: serve solo a stimare meglio i minuti giocati (90 se lo lasci così).</p>
-  <div class="field" style="max-width:160px"><label for="finMin">Minuto finale</label><input id="finMin" type="number" inputmode="numeric" value="${esc(s.fine||90)}"></div>
+  <p class="note" style="margin:0">${nE} eventi · ${nP} giocatori. Scrivi i minuti di recupero: i minuti giocati diventano quelli reali (90 + recuperi).${s.log.some(e=>e.t==="ht")?"":" Se non hai segnato l'intervallo, i minuti di ognuno vengono stimati sull'intera partita."}</p>
+  <div class="row">${recField("rec1In","Recupero 1° tempo",s.rec1)}${recField("rec2In","Recupero 2° tempo",s.rec2)}</div>
+  <p class="note" style="margin:0" id="durTxt"></p>
   <div class="row"><button type="button" class="ghost" data-exp>Esporta Excel</button>${canWrite?`<button type="button" data-send>Invia alla piattaforma</button>`:""}</div>`);
-  $("#finMin").onchange=e=>{s.fine=+e.target.value||90;persist()};
+  const rd=()=>{const a=$("#rec1In").value,b=$("#rec2In").value;s.rec1=a===""?null:Math.max(0,+a);s.rec2=b===""?null:Math.max(0,+b);s.fine=durata(s);$("#durTxt").textContent=`Durata reale: ${durata(s)}'`};
+  $("#rec1In").oninput=$("#rec2In").oninput=()=>{rd();persist()};rd();
   $("#sheetCard").onclick=async e=>{
-    if(e.target.matches("[data-exp]")){s.fine=+$("#finMin").value||90;if(s.stato==="corso")s.stato="terminata";persist();await writeIdx(s);await exportSess(s)}
-    if(e.target.matches("[data-send]")){s.fine=+$("#finMin").value||90;e.target.disabled=true;e.target.textContent="Invio…";
+    if(e.target.matches("[data-exp]")){rd();if(s.stato==="corso")s.stato="terminata";persist();await writeIdx(s);await exportSess(s)}
+    if(e.target.matches("[data-send]")){rd();e.target.disabled=true;e.target.textContent="Invio…";
       try{await sendSess(s);s.stato="inviata";persist();await writeIdx(s);toast("Dati inviati alla piattaforma");closeSheet()}catch(err){e.target.disabled=false;e.target.textContent="Invia alla piattaforma";toast("Invio non riuscito, riprova")}}
   };
 }
 async function exportSess(s){
-  const R=computeSess(s),fine=+s.fine||90;
+  const R=computeSess(s),fine=durata(s);
   const ids=[...new Set([...Object.keys(R),...(s.bench||[])])].sort((a,b)=>((R[b]&&R[b].tit)?1:0)-((R[a]&&R[a].tit)?1:0)||(+s.nums[a]||99)-(+s.nums[b]||99));
   const d=[["Numero","Giocatore","Titolare","Posizione iniziale","Entrato (min. stimato)","Uscito (min. stimato)","Minuti stimati","Minuti per posizione"]];
   ids.forEach(pid=>{const r=R[pid],p=S.players[pid]||{},sl=s.lineup.slots.find(x=>x.pid===pid);
@@ -1521,6 +1551,7 @@ async function sendSess(s){
   const gf=Object.values(R).reduce((a,r)=>a+(r.tot.gol||0),0),gs=s.log.filter(e=>e.t==="e"&&e.c==="GS").length;
   if(s.squadra===s.casa){base.golCasa=gf;if(base.golTrasf==null)base.golTrasf=gs}else{base.golTrasf=gf;if(base.golCasa==null)base.golCasa=gs}
   if(!base.data&&s.data)base.data=s.data;
+  base.durata={...(base.durata||{}),[s.squadra]:durata(s)};
   await ref.set({...base,righe,aggiornato:Date.now()});
 }
 
@@ -1759,7 +1790,7 @@ $("#results").addEventListener("click",e=>{
   const th=e.target.closest("th[data-s]");if(th){const k=th.dataset.s;S.sort=S.sort&&S.sort.k===k?{k,dir:-S.sort.dir}:{k,dir:k==="nome"?1:-1};renderSearch();return}
   const tr=e.target.closest("[data-pid]");if(tr)openPlayer(tr.dataset.pid)});
 document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.matches("tr[data-pid]"))openPlayer(e.target.dataset.pid)});
-const RDESC=["pres","min","gol","assist"];
+const RDESC=["pres","min","pct","gol","assist"];
 $("#roster").addEventListener("click",e=>{
   const th=e.target.closest("th[data-rs]");if(th){const k=th.dataset.rs;RSORT=RSORT.k===k?{k,dir:-RSORT.dir}:{k,dir:RDESC.includes(k)?-1:1};renderRoster();return}
   if(e.target.id==="rDir"){RSORT.dir=-RSORT.dir;renderRoster();return}
