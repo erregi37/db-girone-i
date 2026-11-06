@@ -2057,13 +2057,27 @@ $("#bkFile").addEventListener("change",async e=>{const f=e.target.files[0];e.tar
 
 /* ---------- avvio dell'app dopo l'accesso ---------- */
 function startApp(){
-  $("#gate").hidden=true;$(".wrap").hidden=false;
+  // Prima carichiamo gli stemmi salvati: evitiamo il flash delle sigle al refresh.
+  showGate("load","Carico gli stemmi delle squadre…");
   canWrite=PROFILO.ruolo==="editor"||PROFILO.ruolo==="admin";
   $("#who").textContent=PROFILO.email+" · "+({lettore:"lettore",editor:"editor",admin:"admin"})[PROFILO.ruolo];
   $("#tabAccessi").hidden=!isAdmin;
   if(isAdmin)renderAccessi();
   if(!canWrite){document.querySelectorAll("#addPlayer button,#addPlayer input,#rFile").forEach(x=>x.disabled=true);$("#newSess").hidden=true}
   db=makeDb(sb);
+  let appVisible=false;
+  const revealApp=(error=false)=>{
+    if(appVisible)return;
+    appVisible=true;
+    clearTimeout(crestTimer);
+    // Tutti i render precedenti sono avvenuti a pagina nascosta.
+    // Ora gli stemmi di Supabase sono già disponibili, quindi niente sigle provvisorie.
+    render();
+    $("#gate").hidden=true;$(".wrap").hidden=false;
+    if(error){$("#status").textContent="Stemmi temporaneamente non disponibili";$("#status").classList.add("err")}
+  };
+  // Se Supabase è irraggiungibile, non lasciamo l'app bloccata sulla schermata di caricamento.
+  const crestTimer=setTimeout(()=>revealApp(true),10000);
   let pending=3;const timer=setTimeout(()=>{$("#status").textContent="Il database non risponde ancora: i dati potrebbero non essere aggiornati.";$("#status").classList.add("err")},10000);
   const done=snap=>{if(--pending<=0){clearTimeout(timer);$("#status").classList.remove("err");$("#status").textContent=canWrite?"Dati condivisi, aggiornati in tempo reale":"Sola lettura"}};
   const fail=()=>{clearTimeout(timer);$("#status").textContent="Connessione al database interrotta. Ricarica la pagina.";$("#status").classList.add("err")};
@@ -2072,7 +2086,10 @@ function startApp(){
   db.collection("matches").onSnapshot(s=>{S.matches={};s.docs.forEach(d=>S.matches[d.id]=d.data());aggregate();if(!busy("#profForm"))render();done(s)},fail);
   db.collection("sessidx").onSnapshot(s=>{SESS={};s.docs.forEach(d=>SESS[d.id]=d.data());aggregate();render()},()=>{});
   db.collection("allenatori").onSnapshot(s=>{COACH={};s.docs.forEach(d=>COACH[d.id]=d.data());render()},()=>{});
-  db.collection("stemmi").onSnapshot(s=>{CREST={};s.docs.forEach(d=>CREST[d.id]=d.data());render()},()=>{});
+  db.collection("stemmi").onSnapshot(s=>{
+    CREST={};s.docs.forEach(d=>CREST[d.id]=d.data());
+    render();revealApp();
+  },()=>revealApp(true));
   db.collection("calendario").onSnapshot(s=>{CAL={};s.docs.forEach(d=>CAL[d.id]=d.data());render()},()=>{});
   db.collection("glossario").onSnapshot(s=>{S.gloss={};s.docs.forEach(d=>S.gloss[d.id]=d.data());if(S.view==="glossario"&&!busy("#glossList"))renderGloss();done(s)},fail);
 }
