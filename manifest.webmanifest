@@ -1,0 +1,17 @@
+{
+  "name": "Database Girone I",
+  "short_name": "Girone I",
+  "description": "Banca dati privata Serie D girone I: rose, giornate, rilevazione partite.",
+  "lang": "it",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0D1526",
+  "theme_color": "#060B16",
+  "icons": [
+    {"src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
