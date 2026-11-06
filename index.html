@@ -1888,9 +1888,14 @@ let INSTALL_EV=null;
 const isStandalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 const isMobile=()=>matchMedia("(pointer:coarse)").matches;
-function paintInstall(){const show=!isStandalone()&&(!!INSTALL_EV||isIOS()||isMobile());document.querySelectorAll("[data-install]").forEach(b=>b.hidden=!show)}
+/* Android: il pulsante compare solo quando Chrome permette l'installazione con un tocco (non compare se è già installata).
+   iPhone: Apple non lo permette, quindi il pulsante mostra i 3 passi. */
+let INSTALLED=false;
+function paintInstall(){const show=!isStandalone()&&!INSTALLED&&(!!INSTALL_EV||isIOS());document.querySelectorAll("[data-install]").forEach(b=>{b.hidden=!show;if(INSTALL_EV)b.textContent=b.closest("#gate")?"⬇ Installa l'app":"⬇ Installa app"})}
+if(navigator.getInstalledRelatedApps)navigator.getInstalledRelatedApps().then(l=>{INSTALLED=l.length>0;paintInstall()}).catch(()=>{});
+if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();INSTALL_EV=e;paintInstall()});
-window.addEventListener("appinstalled",()=>{INSTALL_EV=null;paintInstall();toast("App installata: la trovi sulla schermata Home")});
+window.addEventListener("appinstalled",()=>{INSTALL_EV=null;INSTALLED=true;paintInstall();toast("App installata: la trovi sulla schermata Home")});
 function installHelp(){
   const ios=isIOS();
   const steps=ios?["Meglio da <b>Safari</b>; con iOS recente va anche da Chrome.","Tocca <b>Condividi</b>, il quadrato con la freccia verso l'alto (in Chrome è in alto a destra).","Scorri e scegli <b>Aggiungi alla schermata Home</b>, poi <b>Aggiungi</b>."]
