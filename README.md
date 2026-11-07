@@ -11,6 +11,7 @@ Banca dati privata sui giocatori delle squadre calabresi della Serie D 2026/27, 
 |---|---|
 | `index.html` | Tutta l'app: pagina, stile e codice in un solo file |
 | `supabase/schema.sql` | Tabelle e regole di accesso del database (si esegue una volta nel SQL Editor di Supabase) |
+| `docs/PROGETTO.md` | Stato del progetto, decisioni e cose aperte |
 | `AGENTS.md` | Istruzioni per chi modifica il codice (persone, Claude, ChatGPT) |
 
 ## Permessi

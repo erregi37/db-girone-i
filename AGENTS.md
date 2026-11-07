@@ -2,6 +2,8 @@
 
 Vale per persone, Claude, ChatGPT e qualsiasi altro assistente.
 
+Prima di iniziare leggi `docs/PROGETTO.md`: stato del progetto, decisioni prese, cose aperte. Aggiornalo quando cambia qualcosa di importante.
+
 ## Regole
 1. **Una modifica alla volta.** Prima di iniziare, scarica l'ultima versione (pull). Dopo, fai commit con un messaggio chiaro in italiano e push subito.
 2. **Nessun dato nel repository.** Il repository è pubblico. Mai committare backup, file JSON di dati, rose, rilevazioni, email o chiavi segrete. La chiave `sb_publishable_...` in `index.html` è pubblica per progettazione; la `service_role`/secret key non deve mai comparire.
