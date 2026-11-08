@@ -313,7 +313,8 @@ body.tagopen{overflow:hidden}
 .tacts{display:flex;gap:5px;margin-left:auto;flex:0 0 auto}
 .tacts button{white-space:nowrap}
 #tagger.setup .tacts button:not([data-a="flip"]){display:none}
-.egrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-content:start}
+.egrid{display:grid;grid-template-columns:repeat(20,minmax(0,1fr));gap:6px;align-content:start}
+.egrid .eb{grid-column:span 5}.egrid .eb.w5{grid-column:span 4}
 .eb{min-height:46px;font-size:.84rem;line-height:1.15;padding:4px;border-radius:6px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600}
 @media (min-width:900px) and (min-height:600px){.eb{min-height:60px;font-size:1rem}.arow button{font-size:.95rem;padding:8px 12px}}
 .eb.ok{border-color:var(--good);color:var(--good)}
@@ -1059,7 +1060,7 @@ const EVB=[
  {g:"Passaggio"},{c:"X",l:"Passaggio sbagliato",cl:"ko"},{c:"KP",l:"Key pass",cl:"hl"},{c:"AV",l:"↑ Avanti",cl:"hl"},{c:"IN",l:"↓ Indietro",cl:"hl"},
  {g:"Giocata"},{c:"CRS+",l:"Cross ✓",cl:"ok"},{c:"CRS-",l:"Cross ✗",cl:"ko"},{c:"DRB+",l:"Dribbling ✓",cl:"ok"},{c:"DRB-",l:"Dribbling ✗",cl:"ko"},
  {g:"Possesso e falli"},{c:"PP",l:"Palla persa",cl:"ko"},{c:"FS",l:"Fallo subito"},{c:"FC",l:"Fallo fatto"},{c:"GI",l:"Giallo"},
- {g:"Tiro"},{c:"TIP",l:"Tiro in porta",cl:"ok"},{c:"TIF",l:"Tiro fuori"},{c:"TIM",l:"Tiro murato"},{c:"GOL",l:"Gol",cl:"hl"},{c:"GOLR",l:"Gol su rigore",cl:"hl",hide:1},
+ {g:"Tiro"},{c:"TIP",l:"Tiro in porta",cl:"ok",w5:1},{c:"TIF",l:"Tiro fuori",w5:1},{c:"TIM",l:"Tiro murato",w5:1},{c:"GOL",l:"Gol",cl:"hl",w5:1},{c:"RIG",l:"Rigore",cl:"hl",w5:1},{c:"GOLR",l:"Gol su rigore",cl:"hl",hide:1},
  {g:"Difesa"},{c:"DIF+",l:"1v1 dif ✓",cl:"ok"},{c:"DIF-",l:"1v1 dif ✗",cl:"ko"},{c:"AER+",l:"Aereo ✓",cl:"ok"},{c:"AER-",l:"Aereo ✗",cl:"ko"},
  {g:"Recuperi e portiere"},{c:"CTR",l:"Contrasto"},{c:"INT",l:"Intercetto"},{c:"PAR",l:"Parata"},{c:"USC",l:"Uscita"},
  {c:"GS",l:"Gol subito",cl:"ko",team:1,hide:1}
@@ -1132,14 +1133,15 @@ function penInfo(e){if(e.gx==null)return null;const inGoal=e.gx>=0&&e.gx<=7.32&&
   return {inGoal,side,tipo,alt,txt:inGoal?`${sideL}, ${alt} (${tipo})`:`fuori ${e.gy<0?"sopra la traversa":sideL}`}}
 const scoreAt=(s,at)=>{let f=0,a=0;for(let i=0;i<at;i++){const e=s.log[i];if(e.t!=="e")continue;if(e.c==="GOL"||e.c==="GOLR")f++;else if(e.c==="GS")a++}return [f,a]};
 const scTxt=sc=>!sc?"":sc[0]>sc[1]?`in vantaggio ${sc[0]}-${sc[1]}`:sc[0]<sc[1]?`in svantaggio ${sc[0]}-${sc[1]}`:`in parità ${sc[0]}-${sc[1]}`;
-function openShotSheet(c,a,preRig){
+const OUT_L={g:"Gol",p:"Parato",f:"Fuori / palo"};
+function openShotSheet(c,a,preRig,penMode){
   const p=S.players[a]||{};
-  const st={x:null,d:null,bp:p.piede==="Sinistro"?"sx":"dx",sit:preRig?"rig":"az",oo:0,gx:null,gy:null};
+  const st={x:null,d:null,bp:p.piede==="Sinistro"?"sx":"dx",sit:preRig?"rig":"az",oo:0,gx:null,gy:null,out:"g"};
   const chips=(k,o)=>`<div class="chips" role="group">${Object.entries(o).map(([v,l])=>`<button type="button" data-${k}="${v}" aria-pressed="${st[k]===v}">${l}</button>`).join("")}</div>`;
-  openSheet(`<div class="row" style="justify-content:space-between;align-items:center"><h3>${esc(EVK[c].l)} · ${esc(numOf(T.s,a))} ${esc(surname(a))}</h3><button type="button" class="ghost small" data-close>Annulla</button></div>
+  openSheet(`<div class="row" style="justify-content:space-between;align-items:center"><h3>${penMode?"Rigore":esc(EVK[c].l)} · ${esc(numOf(T.s,a))} ${esc(surname(a))}</h3><button type="button" class="ghost small" data-close>Annulla</button></div>
   <div class="shotgrid"><div id="shotArea"></div>
   <div class="stack" style="gap:10px"><div><span class="label">Parte del corpo</span>${chips("bp",BP_L)}</div>
-  <div><span class="label">Situazione</span>${chips("sit",SIT_L)}</div>
+  ${penMode?`<div><span class="label">Esito</span>${chips("out",OUT_L)}</div>`:`<div><span class="label">Situazione</span>${chips("sit",SIT_L)}</div>`}
   <div class="chips"><button type="button" data-oo aria-pressed="false">Solo davanti al portiere</button></div>
   <div class="row" style="align-items:flex-end;justify-content:space-between"><div><span class="label">xG</span><div class="xgval" id="shotXg">—</div></div>
   <div class="row"><button type="button" class="ghost" id="shotNoPos">Senza posizione</button><button type="button" id="shotOk" disabled>Salva tiro</button></div></div></div></div>`);
@@ -1147,6 +1149,7 @@ function openShotSheet(c,a,preRig){
   const upd=()=>{const card=$("#sheetCard");
     card.querySelectorAll("[data-bp]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.bp===st.bp));
     card.querySelectorAll("[data-sit]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.sit===st.sit));
+    card.querySelectorAll("[data-out]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.out===st.out));
     card.querySelector("[data-oo]").setAttribute("aria-pressed",!!st.oo);
     card.querySelector("[data-oo]").hidden=st.sit==="rig";$("#shotNoPos").textContent=st.sit==="rig"?"Senza punto":"Senza posizione";
     const rig=st.sit==="rig";if(rig){st.x=34;st.d=11}
@@ -1157,10 +1160,10 @@ function openShotSheet(c,a,preRig){
     if(rig){$("#goalMk").innerHTML=st.gx!=null?`<circle class="mk cur" cx="${st.gx}" cy="${st.gy}" r=".13"/>`:"";const pi=penInfo(st);if(pi)$("#penTxt").textContent="Rigore "+pi.txt}
     else $("#shotMk").innerHTML=st.x!=null?`<circle class="mk" cx="${st.x}" cy="${st.d}" r="1.3"/>`:"";
     const v=xgOf({c,...st});$("#shotXg").textContent=v==null?"—":fmt(v);$("#shotOk").disabled=v==null};
-  const save=withPos=>{const e={t:"e",c:c==="GOL"&&st.sit==="rig"?"GOLR":c,a,bp:st.bp,sit:st.sit};if(st.sit==="rig"){e.x=34;e.d=11;if(st.gx!=null){e.gx=Math.round(st.gx*100)/100;e.gy=Math.round(st.gy*100)/100}e.sc=scoreAt(T.s,T.ins==null?T.s.log.length:T.ins)}if(st.oo)e.oo=1;if(withPos&&st.x!=null){e.x=Math.round(st.x*10)/10;e.d=Math.round(st.d*10)/10}
-    closeSheet();$("#sheetCard").classList.remove("wide");pushEntry(e);const v=xgOf(e);toast(`${EVK[c].l} ${surname(a)}${v!=null?" · xG "+fmt(v):""}`)};
+  const save=withPos=>{const e={t:"e",c:penMode?({g:"GOLR",p:"TIP",f:"TIF"})[st.out]:(c==="GOL"&&st.sit==="rig"?"GOLR":c),a,bp:st.bp,sit:st.sit};if(st.sit==="rig"){e.x=34;e.d=11;if(st.gx!=null){e.gx=Math.round(st.gx*100)/100;e.gy=Math.round(st.gy*100)/100}e.sc=scoreAt(T.s,T.ins==null?T.s.log.length:T.ins)}if(st.oo)e.oo=1;if(withPos&&st.x!=null){e.x=Math.round(st.x*10)/10;e.d=Math.round(st.d*10)/10}
+    closeSheet();$("#sheetCard").classList.remove("wide");pushEntry(e);const v=xgOf(e);toast(`${penMode?"Rigore "+OUT_L[st.out].toLowerCase():EVK[c].l} ${surname(a)}${v!=null?" · xG "+fmt(v):""}`)};
   $("#sheetCard").onclick=ev=>{const t=ev.target.closest("button");if(!t)return;
-    if(t.dataset.bp){st.bp=t.dataset.bp;upd()}else if(t.dataset.sit){st.sit=t.dataset.sit;upd()}
+    if(t.dataset.bp){st.bp=t.dataset.bp;upd()}else if(t.dataset.sit){st.sit=t.dataset.sit;upd()}else if(t.dataset.out){st.out=t.dataset.out;upd()}
     else if(t.hasAttribute("data-oo")){st.oo=st.oo?0:1;upd()}
     else if(t.id==="shotOk")save(true);else if(t.id==="shotNoPos")save(false)};
   upd();
@@ -1383,7 +1386,7 @@ function renderSetupSide(){
 function renderEventSide(){
   const s=T.s;
   const bar=`<div class="arow"><button type="button" class="ghost" data-a="undo">↶ Annulla</button><button type="button" class="ghost" data-a="sub">⇆ Cambio</button><button type="button" class="ghost" data-a="pos">Ruolo</button><button type="button" class="ghost" data-a="mod">Modulo</button><button type="button" class="ghost ko" data-a="red">Rosso</button><button type="button" class="ghost ko" data-ev="GS" title="Gol subito dalla squadra">Gol subito</button></div>`;
-  const grid=`<div class="egrid">${EVB.filter(b=>!b.hide).map(b=>b.g?`<span class="label sep">${b.g}</span>`:`<button type="button" class="eb ${b.cl||""}" data-ev="${b.c}">${esc(b.l)}</button>`).join("")}</div>`;
+  const grid=`<div class="egrid">${EVB.filter(b=>!b.hide).map(b=>b.g?`<span class="label sep">${b.g}</span>`:`<button type="button" class="eb ${b.cl||""}${b.w5?" w5":""}" data-ev="${b.c}">${esc(b.l)}</button>`).join("")}</div>`;
   $("#tside").innerHTML=bar+grid;
 }
 
@@ -1436,7 +1439,7 @@ $("#tside").addEventListener("click",e=>{
     if(EVK[c].team){pushEntry({t:"e",c,a:null});return}
     if(!T.sel){toast("Tocca prima il giocatore");return}
     const a=T.sel;T.sel=KEEP.has(c)?a:null;
-    if(c==="GOLR"){renderTagger();openShotSheet(c,a,true);return}
+    if(c==="GOLR"||c==="RIG"){renderTagger();openShotSheet("GOLR",a,true,c==="RIG");return}
     if(SHOTS.has(c)){renderTagger();openShotSheet(c,a);return}
     pushEntry({t:"e",c,a});return}
   const act=e.target.closest("[data-a]");if(!act)return;const a=act.dataset.a;
