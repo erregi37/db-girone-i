@@ -1302,7 +1302,7 @@ function renderTagger(){
   $("#pitch").innerHTML=PITCH_LINES+st.slots.map((sl,i)=>{
     if(!sl.pid&&!setup)return "";
     const cls=["dot"];if(!sl.pid)cls.push("empty");if(sl.pid&&sl.pid===T.sel)cls.push("sel");if(T.md&&T.md.first===sl.pid&&sl.pid)cls.push("pick");if(T.mode==="pos"&&T.md&&T.md.a===sl.pid)cls.push("pick");
-    return `<button type="button" class="${cls.join(" ")}" style="--d:${sl.d};--l:${sl.l}" data-slot="${i}" aria-label="${esc(POS[sl.pos]||sl.pos)}${sl.pid?" "+esc(numOf(s,sl.pid)):""}"><b>${sl.pid?esc(numOf(s,sl.pid)):"+"}${sl.pid?uTag((S.players[sl.pid]||{}).anno):""}</b><span>${sl.pid?esc(surname(sl.pid)):esc(sl.pos==="REG"?"PLAY":sl.pos)}</span></button>`}).join("");
+    return `<button type="button" class="${cls.join(" ")}" style="--d:${s.flip?100-sl.d:sl.d};--l:${s.flip?100-sl.l:sl.l}" data-slot="${i}" aria-label="${esc(POS[sl.pos]||sl.pos)}${sl.pid?" "+esc(numOf(s,sl.pid)):""}"><b>${sl.pid?esc(numOf(s,sl.pid)):"+"}${sl.pid?uTag((S.players[sl.pid]||{}).anno):""}</b><span>${sl.pid?esc(surname(sl.pid)):esc(sl.pos==="REG"?"PLAY":sl.pos)}</span></button>`}).join("");
   const L=s.log,at=T.ins==null?L.length:T.ins;
   const last=L.slice(Math.max(0,at-2),at).reverse();
   $("#tLast").innerHTML=last.length?last.map((e,j)=>j===0?`<b>${esc(code(s,e))}</b>`:esc(code(s,e))).join(" · ")+(T.sel?` · palla: <b>${esc(numOf(s,T.sel))}</b>`:""):(setup?"Schieramento":"Pronto");
@@ -1313,6 +1313,7 @@ function renderSetupSide(){
   $("#tside").innerHTML=`<div class="stack" style="gap:10px">
    <h3>Schieramento iniziale</h3>
    <div class="field"><label for="tMod">Modulo</label><select id="tMod">${Object.keys(FORM).map(m=>`<option${m===s.lineup.modulo?" selected":""}>${m}</option>`).join("")}</select></div>
+   <button type="button" class="ghost small" data-a="flip" style="align-self:flex-start">⇄ Gira il campo come in TV</button>
    <p class="note" style="margin:0">Tocca ogni pallino e scegli il giocatore. Il numero di maglia della rosa si può cambiare per questa sola partita.</p>
    <div class="arow"><button type="button" class="ghost" id="tBench">Panchina (${(s.bench||[]).length})</button><button type="button" class="ghost" id="tNums">Numeri di maglia</button></div>
    <button type="button" id="tStart" ${filled===11?"":"disabled"}>Inizia rilevazione (${filled}/11)</button>${filled<11?`<p class="note" style="margin:0">Mancano ${11-filled} giocatori: la rilevazione parte solo con tutti e 11 schierati.</p>`:""}
@@ -1320,7 +1321,7 @@ function renderSetupSide(){
 }
 function renderEventSide(){
   const s=T.s;
-  const bar=`<div class="arow"><button type="button" class="ghost" data-a="undo">↶ Annulla</button><button type="button" class="ghost" data-a="sub">Cambio</button><button type="button" class="ghost" data-a="pos">Ruolo</button><button type="button" class="ghost" data-a="mod">Modulo</button><button type="button" class="ghost" data-a="red">Rosso</button><button type="button" class="ghost" data-a="ht">Intervallo</button><button type="button" class="ghost" data-a="mk">Segnalibro</button><button type="button" class="ghost" data-a="reg">Registro</button><button type="button" data-a="end">Fine</button></div>`;
+  const bar=`<div class="arow"><button type="button" class="ghost" data-a="undo">↶ Annulla</button><button type="button" class="ghost" data-a="sub">Cambio</button><button type="button" class="ghost" data-a="pos">Ruolo</button><button type="button" class="ghost" data-a="mod">Modulo</button><button type="button" class="ghost" data-a="red">Rosso</button><button type="button" class="ghost" data-a="flip" title="Gira il campo come lo vedi in TV (attacca verso sinistra o verso destra)">⇄ Campo</button><button type="button" class="ghost" data-a="ht">Intervallo</button><button type="button" class="ghost" data-a="mk">Segnalibro</button><button type="button" class="ghost" data-a="reg">Registro</button><button type="button" data-a="end">Fine</button></div>`;
   const grid=`<div class="egrid">${EVB.map(b=>b.g?`<span class="label sep">${b.g}</span>`:`<button type="button" class="eb ${b.cl||""}" data-ev="${b.c}">${esc(b.l)}</button>`).join("")}</div>`;
   $("#tside").innerHTML=bar+grid;
 }
@@ -1384,6 +1385,7 @@ $("#tside").addEventListener("click",e=>{
   else if(a==="reg"){T.regOpen=true;openRegistro()}
   else if(a==="end")openEnd();
   else if(a==="ht")openHalf();
+  else if(a==="flip")flipPitch();
 });
 
 /* --- fogli --- */
@@ -1508,6 +1510,7 @@ function regClick(e){
 
 /* --- fine, export, invio --- */
 function recField(id,label,val){return `<div class="field" style="max-width:190px"><label for="${id}">${label}</label><input id="${id}" type="number" inputmode="numeric" min="0" max="20" placeholder="es. 2" value="${val==null?"":esc(val)}"></div>`}
+function flipPitch(){T.s.flip=!T.s.flip;persist();renderTagger();toast(T.s.flip?"Campo girato: attacca verso sinistra":"Campo girato: attacca verso destra")}
 function openHalf(){
   const s=T.s,has=s.log.some(e=>e.t==="ht");
   openSheet(`<div class="row" style="justify-content:space-between;align-items:center"><h3>Fine primo tempo</h3><button type="button" class="ghost small" data-close>Annulla</button></div>
@@ -1516,7 +1519,7 @@ function openHalf(){
   <div class="row"><button type="button" data-htok>${has?"Salva recupero":"Segna intervallo"}</button></div>`);
   setTimeout(()=>{const i=$("#rec1In");if(i)i.focus()},50);
   $("#sheetCard").onclick=e=>{if(!e.target.matches("[data-htok]"))return;const v=$("#rec1In").value;s.rec1=v===""?null:Math.max(0,+v);
-    closeSheet();if(!has)pushEntry({t:"ht"});else{persist();renderTagger()}toast(`Intervallo${s.rec1!=null?" · recupero "+s.rec1+"'":""}`)};
+    closeSheet();if(!has){s.flip=!s.flip;pushEntry({t:"ht"})}else{persist();renderTagger()}toast(`Intervallo${s.rec1!=null?" · recupero "+s.rec1+"'":""}${!has?" · campo girato per il 2° tempo":""}`)};
 }
 function openEnd(){
   const s=T.s,R=computeSess(s);const nP=Object.keys(R).length,nE=s.log.filter(e=>e.t==="p"||e.t==="e").length;
