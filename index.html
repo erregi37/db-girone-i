@@ -296,8 +296,12 @@ body.tagopen{overflow:hidden}
 .dot.empty b{border-style:dashed;color:var(--muted)}
 .dot:focus-visible b{outline:3px solid var(--ink);outline-offset:2px}
 .tside{display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto}
-.arow{display:flex;flex-wrap:wrap;gap:5px}
-.arow button{padding:6px 9px;font-size:.82rem}
+.arow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.arow button{padding:6px 4px;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arow button.ko{border-color:var(--bad);color:var(--bad)}
+.tacts{display:flex;gap:5px;margin-left:auto;flex:0 0 auto}
+.tacts button{white-space:nowrap}
+#tagger.setup .tacts button:not([data-a="flip"]){display:none}
 .egrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-content:start}
 .eb{min-height:46px;font-size:.84rem;line-height:1.15;padding:4px;border-radius:6px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600}
 @media (min-width:900px) and (min-height:600px){.eb{min-height:60px;font-size:1rem}.arow button{font-size:.95rem;padding:8px 12px}}
@@ -305,7 +309,10 @@ body.tagopen{overflow:hidden}
 .eb.ko{border-color:var(--bad);color:var(--bad)}
 .eb.hl{border-color:var(--accent);color:var(--accent)}
 .eb:active{background:var(--soft)}
-.egrid .sep{grid-column:1/-1;margin-top:2px}
+.egrid .sep{grid-column:1/-1;margin:3px 0 -2px;font-size:.62rem}
+@media (max-height:520px){.egrid .sep{display:none}.egrid,.arow{gap:4px}.eb{min-height:34px;font-size:.74rem;padding:2px}.arow button{padding:3px 4px;font-size:.74rem}.tside{gap:5px}}
+@media (min-width:900px) and (min-height:700px){.eb{min-height:68px;font-size:1.02rem}.arow button{padding:10px 6px}}
+@media (max-width:900px){.tacts button{padding:3px 6px;font-size:.72rem}.tbar .tt{max-width:18%}.tbar{gap:6px}}
 .sheet{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:center;justify-content:center;z-index:40;padding:12px}
 .sheet[hidden]{display:none!important}
 .sheet .card.wide{width:min(900px,100%)}
@@ -650,6 +657,7 @@ nav.tabs a[hidden]{display:none}
     <span id="tUnder"></span>
     <span class="tlast" id="tLast"></span>
     <span class="tsave" id="tSave"></span>
+    <span class="tacts" id="tActs"><button type="button" class="ghost small" data-a="flip" title="Gira il campo come lo vedi in TV">⇄ Campo</button><button type="button" class="ghost small" data-a="ht">Intervallo</button><button type="button" class="ghost small" data-a="mk">Segnalibro</button><button type="button" class="ghost small" data-a="reg">Registro</button><button type="button" class="small" data-a="end">Fine</button></span>
   </div>
   <div class="tmain">
     <div class="pitch" id="pitch"></div>
@@ -1037,12 +1045,13 @@ const FORM={
  "3-4-2-1":[...B3,["QS",48,8],["CC",43,37],["CC",43,63],["QD",48,92],["TRQ",66,32],["TRQ",66,68],["PC",84,50]]
 };
 const EVB=[
- {g:"Passaggio"},{c:"X",l:"Passaggio sbagliato",cl:"ko"},{c:"KP",l:"KP key pass",cl:"hl"},{c:"AV",l:"↑ Avanti",cl:"hl"},{c:"IN",l:"↓ Indietro",cl:"hl"},{c:"PP",l:"Palla persa",cl:"ko"},{c:"CRS+",l:"Cross ✓",cl:"ok"},{c:"CRS-",l:"Cross ✗",cl:"ko"},
- {c:"DRB+",l:"Dribbling ✓",cl:"ok"},{c:"DRB-",l:"Dribbling ✗",cl:"ko"},{c:"FS",l:"Fallo subito"},
- {g:"Tiro"},{c:"TIP",l:"Tiro in porta",cl:"ok"},{c:"TIF",l:"Tiro fuori"},{c:"TIM",l:"Tiro murato"},{c:"GOL",l:"Gol",cl:"hl"},{c:"GOLR",l:"Gol su rigore",cl:"hl"},
+ {g:"Passaggio"},{c:"X",l:"Passaggio sbagliato",cl:"ko"},{c:"KP",l:"Key pass",cl:"hl"},{c:"AV",l:"↑ Avanti",cl:"hl"},{c:"IN",l:"↓ Indietro",cl:"hl"},
+ {g:"Giocata"},{c:"CRS+",l:"Cross ✓",cl:"ok"},{c:"CRS-",l:"Cross ✗",cl:"ko"},{c:"DRB+",l:"Dribbling ✓",cl:"ok"},{c:"DRB-",l:"Dribbling ✗",cl:"ko"},
+ {g:"Possesso e falli"},{c:"PP",l:"Palla persa",cl:"ko"},{c:"FS",l:"Fallo subito"},{c:"FC",l:"Fallo fatto"},{c:"GI",l:"Giallo"},
+ {g:"Tiro"},{c:"TIP",l:"Tiro in porta",cl:"ok"},{c:"TIF",l:"Tiro fuori"},{c:"TIM",l:"Tiro murato"},{c:"GOL",l:"Gol",cl:"hl"},{c:"GOLR",l:"Gol su rigore",cl:"hl",hide:1},
  {g:"Difesa"},{c:"DIF+",l:"1v1 dif ✓",cl:"ok"},{c:"DIF-",l:"1v1 dif ✗",cl:"ko"},{c:"AER+",l:"Aereo ✓",cl:"ok"},{c:"AER-",l:"Aereo ✗",cl:"ko"},
- {c:"CTR",l:"Contrasto"},{c:"INT",l:"Intercetto"},{c:"FC",l:"Fallo fatto"},{c:"GI",l:"Giallo"},
- {g:"Portiere"},{c:"PAR",l:"Parata"},{c:"USC",l:"Uscita"},{c:"GS",l:"Gol subito",cl:"ko",team:1}
+ {g:"Recuperi e portiere"},{c:"CTR",l:"Contrasto"},{c:"INT",l:"Intercetto"},{c:"PAR",l:"Parata"},{c:"USC",l:"Uscita"},
+ {c:"GS",l:"Gol subito",cl:"ko",team:1,hide:1}
 ];
 const EVK=Object.fromEntries(EVB.filter(e=>e.c).map(e=>[e.c,e]));
 const EV_INC={TIP:["tiri","tiri_porta"],TIF:["tiri"],TIM:["tiri"],GOL:["gol","tiri","tiri_porta"],GOLR:["gol","gol_rig","tiri","tiri_porta"],X:["pass_tot"],
@@ -1321,8 +1330,8 @@ function renderSetupSide(){
 }
 function renderEventSide(){
   const s=T.s;
-  const bar=`<div class="arow"><button type="button" class="ghost" data-a="undo">↶ Annulla</button><button type="button" class="ghost" data-a="sub">Cambio</button><button type="button" class="ghost" data-a="pos">Ruolo</button><button type="button" class="ghost" data-a="mod">Modulo</button><button type="button" class="ghost" data-a="red">Rosso</button><button type="button" class="ghost" data-a="flip" title="Gira il campo come lo vedi in TV (attacca verso sinistra o verso destra)">⇄ Campo</button><button type="button" class="ghost" data-a="ht">Intervallo</button><button type="button" class="ghost" data-a="mk">Segnalibro</button><button type="button" class="ghost" data-a="reg">Registro</button><button type="button" data-a="end">Fine</button></div>`;
-  const grid=`<div class="egrid">${EVB.map(b=>b.g?`<span class="label sep">${b.g}</span>`:`<button type="button" class="eb ${b.cl||""}" data-ev="${b.c}">${esc(b.l)}</button>`).join("")}</div>`;
+  const bar=`<div class="arow"><button type="button" class="ghost" data-a="undo">↶ Annulla</button><button type="button" class="ghost" data-a="sub">⇆ Cambio</button><button type="button" class="ghost" data-a="pos">Ruolo</button><button type="button" class="ghost" data-a="mod">Modulo</button><button type="button" class="ghost ko" data-a="red">Rosso</button><button type="button" class="ghost ko" data-ev="GS" title="Gol subito dalla squadra">Gol subito</button></div>`;
+  const grid=`<div class="egrid">${EVB.filter(b=>!b.hide).map(b=>b.g?`<span class="label sep">${b.g}</span>`:`<button type="button" class="eb ${b.cl||""}" data-ev="${b.c}">${esc(b.l)}</button>`).join("")}</div>`;
   $("#tside").innerHTML=bar+grid;
 }
 
@@ -1361,6 +1370,8 @@ $("#tside").addEventListener("change",e=>{
   const old=s.lineup.slots.filter(x=>x.pid),ns=slotsFrom(mod);
   ns.forEach(sl=>{let bi=-1,bd=1e9;old.forEach((p,j)=>{const d=(p.pos==="POR")!==(sl.pos==="POR")?1e6:(p.d-sl.d)**2+(p.l-sl.l)**2;if(d<bd){bd=d;bi=j}});if(bi>=0)sl.pid=old.splice(bi,1)[0].pid});
   s.lineup={modulo:mod,slots:ns};persist();renderTagger()});
+$("#tActs").addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b||!T.s)return;if(T.s.stato==="schieramento"&&b.dataset.a!=="flip"){toast("Prima completa lo schieramento e premi Inizia rilevazione");return}
+  const tmp=document.createElement("button");tmp.dataset.a=b.dataset.a;tmp.hidden=true;$("#tside").appendChild(tmp);tmp.click();tmp.remove()});
 $("#tside").addEventListener("click",e=>{
   const s=T.s;if(!s)return;
   if(e.target.id==="tStart"){if(s.lineup.slots.filter(x=>x.pid).length<11){toast("Schiera tutti e 11 i giocatori");return}s.stato="corso";persist();writeIdx(s);renderTagger();return}

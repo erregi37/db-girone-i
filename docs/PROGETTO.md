@@ -64,7 +64,8 @@ Ci sono anche il tema chiaro/scuro, il pulsante "Installa app" e la scheda gioca
   - si apre la porta vista da chi calcia e si tocca dove è andato il pallone (anche fuori dallo specchio);
   - si salvano lato, altezza, aperto/incrociato/centrale (in base al piede) e punteggio al momento;
   - lo storico è nel profilo.
-- **Barra**: Annulla, Cambio, Ruolo (scambio posizione), Modulo, Rosso, **⇄ Campo** (gira il campo come lo si vede in TV; si gira da solo all'Intervallo), **Intervallo** (segna la fine del 1° tempo e il recupero), Segnalibro, Registro (eventi modificabili ed eliminabili), Fine (recuperi del 1° e 2° tempo, Esporta Excel, Invia alla piattaforma).
+- **Barra in alto**: ⇄ Campo (gira il campo come in TV; si gira da solo all'Intervallo), Intervallo (fine 1° tempo e recupero), Segnalibro, Registro (eventi modificabili ed eliminabili), Fine (recupero 2° tempo, Esporta Excel, Invia alla piattaforma).
+- **Accanto al campo**: Annulla, Cambio, Ruolo (scambio di posizione), Modulo, Rosso, Gol subito; poi gli eventi a coppie ✓/✗ su 4 colonne: Passaggio, Giocata, Possesso e falli, Tiro, Difesa, Recuperi e portiere. Il gol su rigore si registra con Gol → situazione Rigore.
 - **Controllo under** nella barra: ✓/✗ per 08, 07 e 06.
 - **Salvataggio** continuo nel database, più una copia nel browser.
 
