@@ -267,6 +267,17 @@ body.tagopen{overflow:hidden}
 .tmain{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:10px;padding:8px 10px}
 #tagger.setup .tmain{grid-template-columns:minmax(0,2.2fr) minmax(220px,1fr)}
 @media (orientation:portrait){.tmain,#tagger.setup .tmain{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}#tagger.setup .tside{max-height:38vh}}
+.pcol{display:grid;grid-template-rows:minmax(0,1fr) auto;gap:6px;min-height:0;min-width:0}
+.bstrip{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px;min-height:0}
+.bstrip:empty{display:none}
+.bstrip .blab{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);flex:0 0 auto}
+.bchip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 6px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:.8rem;font-weight:600;touch-action:pan-x;cursor:grab;user-select:none;-webkit-user-select:none}
+.bchip b{display:inline-grid;place-items:center;min-width:24px;height:24px;border-radius:50%;background:var(--soft);font-family:var(--f-display)}
+.dot{touch-action:none;-webkit-user-select:none;user-select:none}
+.dragghost{position:fixed;z-index:80;pointer-events:none;transform:translate(-50%,-60%);padding:6px 12px;border-radius:999px;background:var(--accent);color:#06121f;font-weight:700;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.dot.dropok b,.bchip.dropok,.bstrip.dropok{outline:3px solid var(--accent);outline-offset:2px}
+.bstrip.dropok{border-radius:8px}
+@media (max-height:450px){.bchip{padding:3px 8px 3px 4px;font-size:.72rem}.bchip b{min-width:20px;height:20px}}
 .pitch{container-type:size;position:relative;width:100%;height:100%;min-height:200px;background:var(--pitch);border:2px solid var(--pline);border-radius:6px;overflow:hidden;touch-action:manipulation}
 .pl{position:absolute;border:2px solid var(--pline)}
 .pl.half{left:50%;top:-2px;bottom:-2px;border-width:0 0 0 2px}
@@ -660,7 +671,7 @@ nav.tabs a[hidden]{display:none}
     <span class="tacts" id="tActs"><button type="button" class="ghost small" data-a="flip" title="Gira il campo come lo vedi in TV">⇄ Campo</button><button type="button" class="ghost small" data-a="ht">Intervallo</button><button type="button" class="ghost small" data-a="mk">Segnalibro</button><button type="button" class="ghost small" data-a="reg">Registro</button><button type="button" class="small" data-a="end">Fine</button></span>
   </div>
   <div class="tmain">
-    <div class="pitch" id="pitch"></div>
+    <div class="pcol"><div class="pitch" id="pitch"></div><div class="bstrip" id="tBenchStrip" aria-label="Panchina"></div></div>
     <div class="tside" id="tside"></div>
   </div>
   <div class="hint" id="tHint" hidden></div>
@@ -1315,16 +1326,57 @@ function renderTagger(){
   const L=s.log,at=T.ins==null?L.length:T.ins;
   const last=L.slice(Math.max(0,at-2),at).reverse();
   $("#tLast").innerHTML=last.length?last.map((e,j)=>j===0?`<b>${esc(code(s,e))}</b>`:esc(code(s,e))).join(" · ")+(T.sel?` · palla: <b>${esc(numOf(s,T.sel))}</b>`:""):(setup?"Schieramento":"Pronto");
+  renderBenchStrip(st);
   if(setup)renderSetupSide();else renderEventSide();
+}
+/* panchina sempre visibile sotto il campo: si trascina un panchinaro su un pallino per farlo entrare */
+function benchAvail(st){const s=T.s,on=new Set(st.slots.map(x=>x.pid).filter(Boolean)),used=new Set();
+  if(s.stato!=="schieramento")s.log.forEach(e=>{if(e.t==="sub"){used.add(e.i);used.add(e.o)}});
+  return (s.bench||[]).filter(p=>!on.has(p)&&!used.has(p)).sort((a,b)=>(+numOf(s,a)||99)-(+numOf(s,b)||99))}
+function renderBenchStrip(st){const s=T.s,list=benchAvail(st);
+  $("#tBenchStrip").innerHTML=list.length?`<span class="blab">Panchina</span>${list.map(p=>`<span class="bchip" data-bpid="${p}" role="button" tabindex="0">${`<b>${esc(numOf(s,p)||"–")}</b>`}${esc(surname(p))}</span>`).join("")}`:(s.stato==="schieramento"?`<span class="blab">Panchina vuota: trascina qui un giocatore dal campo o usa il pulsante Panchina</span>`:"")}
+
+/* trascinamento: scambio di posizione tra due pallini, ingresso dalla panchina, uscita verso la panchina (solo nello schieramento) */
+const DRAG={on:false,justEnded:0};
+function dragTarget(x,y){const el=document.elementFromPoint(x,y);if(!el)return null;
+  const d=el.closest("#pitch [data-slot]");if(d)return{k:"slot",i:+d.dataset.slot,el:d};
+  const c=el.closest("[data-bpid]");if(c)return{k:"bench",pid:c.dataset.bpid,el:c};
+  const b=el.closest("#tBenchStrip");if(b)return{k:"strip",el:b};return null}
+document.addEventListener("pointerdown",e=>{
+  if(!T.s||$("#tagger").hidden||T.mode||!canWrite)return;
+  const dot=e.target.closest("#pitch [data-slot]"),chip=e.target.closest("[data-bpid]");if(!dot&&!chip)return;
+  const st=curState(),setup=T.s.stato==="schieramento";
+  let src;if(dot){const sl=(setup?T.s.lineup.slots:st.slots)[+dot.dataset.slot];if(!sl||!sl.pid)return;src={k:"slot",i:+dot.dataset.slot,pid:sl.pid}}else src={k:"bench",pid:chip.dataset.bpid};
+  const x0=e.clientX,y0=e.clientY;let ghost=null,over=null;
+  const mv=ev=>{if(!ghost){if(Math.hypot(ev.clientX-x0,ev.clientY-y0)<10)return;DRAG.on=true;ghost=document.createElement("div");ghost.className="dragghost";ghost.textContent=`${numOf(T.s,src.pid)} ${surname(src.pid)}`;document.body.appendChild(ghost)}
+    ev.preventDefault();ghost.style.left=ev.clientX+"px";ghost.style.top=ev.clientY+"px";
+    const t=dragTarget(ev.clientX,ev.clientY);if(over&&(!t||t.el!==over))over.classList.remove("dropok");over=null;
+    if(t&&!(t.k===src.k&&(t.i===src.i&&t.k==="slot"||t.pid===src.pid&&t.k==="bench"))){over=t.el;over.classList.add("dropok")}};
+  const up=ev=>{document.removeEventListener("pointermove",mv);document.removeEventListener("pointerup",up);document.removeEventListener("pointercancel",up);
+    if(over)over.classList.remove("dropok");if(!ghost)return;ghost.remove();DRAG.on=false;DRAG.justEnded=Date.now();
+    const t=dragTarget(ev.clientX,ev.clientY);if(t)dropOn(src,t)};
+  document.addEventListener("pointermove",mv,{passive:false});document.addEventListener("pointerup",up);document.addEventListener("pointercancel",up);
+});
+function dropOn(src,t){const s=T.s,setup=s.stato==="schieramento";
+  if(setup){const sl=s.lineup.slots;s.bench=s.bench||[];
+    const toBench=p=>{if(p&&!s.bench.includes(p))s.bench.push(p)};
+    if(src.k==="slot"&&t.k==="slot"&&t.i!==src.i){const a=sl[src.i].pid;sl[src.i].pid=sl[t.i].pid;sl[t.i].pid=a}
+    else if(src.k==="slot"&&(t.k==="strip"||t.k==="bench")){toBench(sl[src.i].pid);sl[src.i].pid=null}
+    else if(src.k==="bench"&&t.k==="slot"){const old=sl[t.i].pid;sl[t.i].pid=src.pid;s.bench=s.bench.filter(p=>p!==src.pid);toBench(old);if(s.nums[src.pid]==null)s.nums[src.pid]=numFor(S.players[src.pid],s.squadra)}
+    else return;
+    persist();renderTagger();return}
+  const st=curState();
+  if(src.k==="slot"&&t.k==="slot"){const b=st.slots[t.i]&&st.slots[t.i].pid;if(!b||b===src.pid)return;pushEntry({t:"pos",a:src.pid,b});toast(`${surname(src.pid)} e ${surname(b)} si scambiano posizione`);return}
+  if(src.k==="bench"&&t.k==="slot"){const o=st.slots[t.i]&&st.slots[t.i].pid;if(!o)return;if(s.nums[src.pid]==null)s.nums[src.pid]=numFor(S.players[src.pid],s.squadra);if(T.sel===o)T.sel=null;
+    pushEntry({t:"sub",o,i:src.pid});toast(`Esce ${surname(o)}, entra ${surname(src.pid)}`);return}
 }
 function renderSetupSide(){
   const s=T.s,filled=s.lineup.slots.filter(x=>x.pid).length;
   $("#tside").innerHTML=`<div class="stack" style="gap:10px">
    <h3>Schieramento iniziale</h3>
    <div class="field"><label for="tMod">Modulo</label><select id="tMod">${Object.keys(FORM).map(m=>`<option${m===s.lineup.modulo?" selected":""}>${m}</option>`).join("")}</select></div>
-   <button type="button" class="ghost small" data-a="flip" style="align-self:flex-start">⇄ Gira il campo come in TV</button>
-   <p class="note" style="margin:0">Tocca ogni pallino e scegli il giocatore. Il numero di maglia della rosa si può cambiare per questa sola partita.</p>
-   <div class="arow"><button type="button" class="ghost" id="tBench">Panchina (${(s.bench||[]).length})</button><button type="button" class="ghost" id="tNums">Numeri di maglia</button></div>
+   <p class="note" style="margin:0">Tocca un pallino per scegliere il giocatore. Trascina un pallino su un altro per scambiarli; trascina un panchinaro (sotto il campo) su un pallino per metterlo dentro. Con ⇄ Campo, in alto, giri il campo come lo vedi in TV.</p>
+   <div class="arow" style="grid-template-columns:1fr 1fr"><button type="button" class="ghost" id="tBench">Panchina (${(s.bench||[]).length})</button><button type="button" class="ghost" id="tNums">Numeri di maglia</button></div>
    <button type="button" id="tStart" ${filled===11?"":"disabled"}>Inizia rilevazione (${filled}/11)</button>${filled<11?`<p class="note" style="margin:0">Mancano ${11-filled} giocatori: la rilevazione parte solo con tutti e 11 schierati.</p>`:""}
   </div>`;
 }
@@ -1349,6 +1401,7 @@ function pushEntry(e){if(!canWrite){toast("Sola lettura");return}
   if(T.s.stato==="terminata"||T.s.stato==="inviata")T.s.stato="corso";
   persist();renderTagger();if(T.regOpen&&!T.editing)renderRegistro()}
 $("#pitch").addEventListener("click",e=>{
+  if(Date.now()-DRAG.justEnded<350)return;
   const b=e.target.closest("[data-slot]");if(!b||!T.s)return;const i=+b.dataset.slot;
   const s=T.s;
   if(s.stato==="schieramento"){openSlotPicker(i);return}

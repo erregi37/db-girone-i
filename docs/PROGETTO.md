@@ -55,6 +55,7 @@ Ci sono anche il tema chiaro/scuro, il pulsante "Installa app" e la scheda gioca
   - toccando un pallino si vedono prima i giocatori adatti a quella posizione, poi gli altri, per numero di maglia, con barra di ricerca per nome o numero;
   - panchina e numeri di maglia della singola partita, con i numeri ripetuti in rosso;
   - etichette under sui pallini.
+- **Trascinamento**: un pallino su un altro = scambio (nello schieramento cambia la formazione, durante la partita registra un cambio di ruolo); la panchina è sempre visibile sotto il campo e un panchinaro trascinato su un pallino entra (nello schieramento) o fa il cambio (in partita); nello schieramento un pallino trascinato sulla panchina torna in panchina.
 - **Eventi** (`EVB`): passaggio (giocatore → giocatore), X = passaggio sbagliato, KP (key pass = passaggio fatto nella trequarti offensiva), ↑AV / ↓IN, PP, cross ±, dribbling ±, FS, tiri (TIP, TIF, TIM), GOL, GOLR, duelli difensivi ±, aerei ±, contrasto, intercetto, fallo commesso, giallo, parata, uscita, GS.
 - **Tiri e xG**:
   - si apre il mezzo campo e si tocca il punto del tiro;
