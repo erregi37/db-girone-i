@@ -295,6 +295,11 @@ body.tagopen{overflow:hidden}
 .utag{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:17px;padding:0 4px;border-radius:4px;font:700 .68rem/1 var(--f-mono,monospace);letter-spacing:.02em;vertical-align:middle;margin-left:6px;color:#fff}
 .utag.u8{background:#d9468f}.utag.u7{background:#8b5cf6}.utag.u6{background:#0ea5a4}
 .dot b{position:relative}.dot .utag{position:absolute;top:-6px;right:-12px;margin:0;height:15px;min-width:18px;font-size:.6rem;box-shadow:0 0 0 2px var(--surface)}
+.tstat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tstat>div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tstat b{font-family:var(--f-display);font-size:1.5rem;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--accent)}
+.tstat small{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+@media(min-width:700px){.tstat{grid-template-columns:repeat(6,minmax(0,1fr))}}
 .usum{display:inline-flex;align-items:center;gap:2px;margin-left:10px;white-space:nowrap}.usum .utag{margin-left:6px}
 .ucheck{display:inline-flex;gap:4px;font:600 .72rem/1 var(--f-mono,monospace);white-space:nowrap}
 .ucheck span{padding:3px 6px;border-radius:4px;background:var(--soft)}
@@ -596,6 +601,7 @@ nav.tabs a[hidden]{display:none}
           <button type="button" class="ghost small" id="teamReport">Report Excel</button>
         </div>
       </div>
+      <div id="rTeamStats"></div>
       <div id="roster"></div>
       <div class="panel stack" style="gap:10px">
         <div class="row" style="justify-content:space-between;align-items:center"><h3>Allenatori</h3></div>
@@ -996,8 +1002,17 @@ async function saveFile(filename,buf){
 /* ---------- rose ---------- */
 let RSORT={k:"ruolo",dir:1};
 const RCOLS=[["num","N.","n"],["nome","Giocatore",""],["ruolo","Ruolo",""],["pos","Più utilizzato",""],["anno","Anno","n"],["piede","Piede",""],["pres","Pres.","n"],["min","Min","n"],["pct","% Min","n"],["gol","Gol","n"],["assist","Assist","n"]];
+function teamRecord(t){
+  const r={g:0,v:0,n:0,p:0,gf:0,gs:0,ug:0};
+  Object.values(CAL).forEach(m=>{if(m.golCasa==null||m.golTrasf==null)return;const h=m.casa===t;if(!h&&m.trasferta!==t)return;
+    const f=h?+m.golCasa:+m.golTrasf,a=h?+m.golTrasf:+m.golCasa;r.g++;r.gf+=f;r.gs+=a;if(f>a)r.v++;else if(f<a)r.p++;else r.n++;r.ug=Math.max(r.ug,+m.giornata||0)});
+  r.pt=r.v*3+r.n;return r}
+function renderTeamStats(t){
+  const r=teamRecord(t);if(!r.g){$("#rTeamStats").innerHTML="";return}
+  const dr=r.gf-r.gs,c=(v,l,ti)=>`<div${ti?` title="${ti}"`:""}><b>${v}</b><small>${l}</small></div>`;
+  $("#rTeamStats").innerHTML=`<div class="tstat">${c(r.pt,"Punti","Calcolati dai risultati: 3 a vittoria, 1 a pareggio. Eventuali penalizzazioni non sono comprese.")}${c(r.g,"Giocate")}${c(`${r.v}-${r.n}-${r.p}`,"V-N-P","Vittorie, pareggi, sconfitte")}${c(r.gf,"Gol fatti")}${c(r.gs,"Gol subiti")}${c((dr>0?"+":"")+dr,"Differenza")}</div><p class="note" style="margin:6px 0 0">Dai risultati inseriti, fino alla ${r.ug}ª giornata.</p>`}
 function renderRoster(){
-  const t=$("#rTeam").value;const ps=Object.entries(S.players).filter(([,p])=>p.squadra===t||(p.ex||[]).includes(t));
+  const t=$("#rTeam").value;renderTeamStats(t);const ps=Object.entries(S.players).filter(([,p])=>p.squadra===t||(p.ex||[]).includes(t));
   const nGone=ps.filter(([,p])=>p.squadra!==t).length;const cur=ps.filter(([,p])=>p.squadra===t);const uc=y=>cur.filter(([,p])=>y===2008?+p.anno>=2008:+p.anno===y).length;
   $("#rCount").innerHTML=ps.length?`${ps.length-nGone} giocatori in rosa${nGone?` · ${nGone} ${nGone===1?"ceduto":"ceduti"}`:""}<span class="usum" title="Under in rosa: nati nel 2008 o dopo, nel 2007, nel 2006">${uTag(2008)} ${uc(2008)} ${uTag(2007)} ${uc(2007)} ${uTag(2006)} ${uc(2006)}</span>`:"";
   if(!ps.length){$("#roster").innerHTML=`<div class="panel empty"><h3>Rosa ${esc(t)} non ancora inserita</h3><p>Aggiungi i giocatori uno alla volta o incolla la rosa intera da Gestisci rosa. In alternativa la rosa si forma da sola caricando le partite.</p></div>`;return}

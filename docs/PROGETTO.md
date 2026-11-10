@@ -1,6 +1,6 @@
 # Database Girone I — stato del progetto
 
-Documento di passaggio di consegne: cosa è il progetto, come è fatto, cosa è stato deciso, dove siamo arrivati. Va aggiornato a ogni modifica importante. Ultimo aggiornamento: 7 novembre 2026.
+Documento di passaggio di consegne: cosa è il progetto, come è fatto, cosa è stato deciso, dove siamo arrivati. Va aggiornato a ogni modifica importante. Ultimo aggiornamento: 10 novembre 2026.
 
 ## 1. Cos'è
 
@@ -41,7 +41,7 @@ La vecchia versione era un artifact su claude.ai, "Database Girone I". Non va pi
 3. **Rilevazione**: elenco delle sessioni e pulsantiera (dettagli nella sezione 4).
 4. **Rete passaggi**: nodi dimensionati sui passaggi ricevuti, archi sulla frequenza; distingue passaggi in avanti, orizzontali e all'indietro.
 5. **Carica partite**: import da Excel.
-6. **Rose**: solo le 5 calabresi. Ordinamento per numero, cognome, ruolo, più utilizzato, anno, piede, presenze, minuti, % minuti, gol e assist. I ceduti restano in fondo, in grigio, con "ceduto · ora X". Le statistiche della rosa contano solo quanto fatto con quella squadra. In alto il conteggio degli under per fascia; c'è anche il Report Excel. Sul telefono la rosa è a schede.
+6. **Rose**: solo le 5 calabresi. Ordinamento per numero, cognome, ruolo, più utilizzato, anno, piede, presenze, minuti, % minuti, gol e assist. I ceduti restano in fondo, in grigio, con "ceduto · ora X". Le statistiche della rosa contano solo quanto fatto con quella squadra. In alto il conteggio degli under per fascia; c'è anche il Report Excel. Sopra la rosa ci sono i numeri di squadra calcolati dai risultati del calendario: punti (3 a vittoria, 1 a pareggio, senza eventuali penalizzazioni), partite giocate, vittorie-pareggi-sconfitte, gol fatti, gol subiti, differenza, con l'ultima giornata considerata. Sul telefono la rosa è a schede.
 7. **Glossario**: definizioni degli indicatori.
 8. **Accessi** (solo admin): approvazione dei soci e backup.
 
@@ -104,6 +104,8 @@ Ci sono anche il tema chiaro/scuro, il pulsante "Installa app" e la scheda gioca
 - **Numeri di maglia**: manca il numero di Sabella alla Vibonese; la Digiesse Praia Tortora non ha numeri.
 - **Correzioni di nomi**: il numero 11 del Sambiase è Giancarlo **Simigliani**; lo corregge il proprietario dalla scheda. I doppi cognomi sudamericani sono ordinati per l'ultimo cognome: da confermare.
 - **Verifiche fatte solo in simulazione** (database finto e telefono emulato): tempo reale tra dispositivi, installazione con un tocco su Android.
+- **Posizione in classifica nella scheda Rose**: non si può calcolare, perché il calendario contiene solo le partite delle 5 calabresi e non quelle delle altre squadre del girone. Si potrà aggiungere quando l'aggiornamento automatico dei risultati porterà tutto il girone.
+- **Tiri di squadra nella scheda Rose** (somma dei tiri e dei tiri in porta dei giocatori): rimandata dal proprietario.
 - **Idee non ancora fatte**: rigori calciati e segnati come colonna nelle statistiche; mappa dei tiri nel profilo; posizione separata per squadra (scartata per ora).
 
 ## 8. Come lavorare (per Claude, ChatGPT o chiunque)
