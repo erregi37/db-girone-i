@@ -685,7 +685,7 @@ const TEAMS=["Athletic Palermo","Avola","Castrumfavara","Digiesse Praia Tortora"
 const ROLES=[["POR","Portiere"],["DC","Difensore centrale"],["TER","Terzino"],["CEN","Centrocampista"],["EST","Esterno"],["TRQ","Trequartista"],["ATT","Attaccante"]];
 const QUAL=[["tecnica","Tecnica"],["fisico","Fisico"],["tattica","Lettura tattica"],["personalita","Personalità"]];
 const M=[
- {k:"gol",l:"Gol"},{k:"gol_rig",l:"Gol su rigore"},{k:"assist",l:"Assist"},{k:"xg",l:"xG",dec:1},{k:"tiri",l:"Tiri"},{k:"tiri_porta",l:"Tiri in porta"},
+ {k:"gol",l:"Gol"},{k:"gol_rig",l:"Gol su rigore"},{k:"rig_tot",l:"Rigori calciati"},{k:"rig_sba",l:"Rigori sbagliati",low:1},{k:"assist",l:"Assist"},{k:"xg",l:"xG",dec:1},{k:"tiri",l:"Tiri"},{k:"tiri_porta",l:"Tiri in porta"},
  {k:"key_pass",l:"Key pass"},{k:"pass_tot",l:"Passaggi tentati"},{k:"pass_ok",l:"Passaggi riusciti"},{k:"pass_ric",l:"Passaggi ricevuti"},{k:"pass_av",l:"Passaggi in avanti"},{k:"pass_ind",l:"Passaggi all'indietro"},
  {k:"cross_tot",l:"Cross tentati"},{k:"cross_ok",l:"Cross riusciti"},{k:"drib_tot",l:"Dribbling tentati"},{k:"drib_ok",l:"Dribbling riusciti"},
  {k:"duelli_tot",l:"1v1 difensivi"},{k:"duelli_vinti",l:"1v1 difensivi vinti"},{k:"aerei_tot",l:"Duelli aerei"},{k:"aerei_vinti",l:"Duelli aerei vinti"},
@@ -696,12 +696,12 @@ const M=[
 const P=[
  {k:"pass_pct",l:"% passaggi riusciti",n:"pass_ok",d:"pass_tot"},{k:"cross_pct",l:"% cross riusciti",n:"cross_ok",d:"cross_tot"},
  {k:"drib_pct",l:"% dribbling riusciti",n:"drib_ok",d:"drib_tot"},{k:"duelli_pct",l:"% 1v1 difensivi vinti",n:"duelli_vinti",d:"duelli_tot"},
- {k:"aerei_pct",l:"% duelli aerei vinti",n:"aerei_vinti",d:"aerei_tot"},{k:"tiri_pct",l:"% tiri in porta",n:"tiri_porta",d:"tiri"},{k:"av_pct",l:"% passaggi in avanti",n:"pass_av",d:"pass_ok"}
+ {k:"aerei_pct",l:"% duelli aerei vinti",n:"aerei_vinti",d:"aerei_tot"},{k:"tiri_pct",l:"% tiri in porta",n:"tiri_porta",d:"tiri"},{k:"rig_pct",l:"% rigori segnati",n:"gol_rig",d:"rig_tot"},{k:"av_pct",l:"% passaggi in avanti",n:"pass_av",d:"pass_ok"}
 ];
 const IND=[...M.map(m=>({k:m.k,l:m.l+" /90",type:"p90",low:m.low,gk:m.gk})),...P.map(p=>({...p,type:"pct"}))];
 const INDK=Object.fromEntries(IND.map(i=>[i.k,i]));
 const DEF={
- gol:"Rete segnata, autogol esclusi. Comprende i gol su rigore.",gol_rig:"Rete segnata su calcio di rigore.",
+ gol:"Rete segnata, autogol esclusi. Comprende i gol su rigore.",gol_rig:"Rete segnata su calcio di rigore.",rig_tot:"Rigori calciati, segnati o sbagliati.",rig_sba:"Rigori non segnati: parati, fuori o sul palo.",
  assist:"Calcolato in automatico: passaggio riuscito al compagno che segna subito dopo, senza altri eventi in mezzo.",
  xg:"Expected goals: probabilità che un tiro diventi gol (da 0 a 1). Si calcola da dove si tira (distanza e angolo verso la porta, con un modello di regressione logistica pubblicato da Soccermatics), parte del corpo (la testa vale meno del piede), situazione (contropiede, palla inattiva, punizione diretta) e se il tiratore era solo davanti al portiere. Rigore = 0,79. I tiri registrati senza posizione non hanno xG.",
  tiri:"Ogni conclusione verso la porta: in porta, fuori o murata.",tiri_porta:"Tiro che finisce in porta o che il portiere deve parare. Il tiro murato da un difensore non conta.",
@@ -1208,6 +1208,7 @@ function computeSess(s){normSess(s);
     if(e.t==="p"){add(e.a,"pass_tot",k(e.a));add(e.a,"pass_ok",k(e.a));add(e.b,"pass_ric",k(e.b));if(e.kp)add(e.a,"key_pass",k(e.a));if(e.dir==="f")add(e.a,"pass_av",k(e.a));if(e.dir==="b")add(e.a,"pass_ind",k(e.a));
       const n=nextEv(i);if(n&&n.t==="e"&&n.a===e.b&&(n.c==="GOL"||n.c==="GOLR"))add(e.a,"assist",k(e.a))}
     else if(e.t==="e"){if(e.c==="GS"){const gk=slots.find(x=>x.pos==="POR"&&x.pid);if(gk)add(gk.pid,"gol_subiti",k(gk.pid))}else{(EV_INC[e.c]||[]).forEach(m=>add(e.a,m,k(e.a)));
+      if(e.a&&(e.c==="GOLR"||e.sit==="rig")){add(e.a,"rig_tot",k(e.a));if(e.c!=="GOLR")add(e.a,"rig_sba",k(e.a))}
       const xv=xgOf(e);if(xv!=null&&e.a){const r=row(e.a);r.tot.xg=(r.tot.xg||0)+xv;const key=k(e.a);if(key){const p=r.pos[key]||(r.pos[key]={min:0,tot:{}});p.tot.xg=(p.tot.xg||0)+xv}}}}
     else if(e.t==="sub"){const m=mm(e,i);const key=k(e.o);stop(e.o,m);start(e.i,m,key)}
     else if(e.t==="red"){add(e.a,"rossi",k(e.a));stop(e.a,mm(e,i))}
