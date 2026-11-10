@@ -1,0 +1,16 @@
+{
+  "nota": "Solo punteggi e marcatori pubblici delle partite delle calabresi. Li aggiorna l'attività automatica; l'app li copia nel database quando la apre un editor o un admin, riempiendo solo risultati e marcatori mancanti.",
+  "aggiornato": "2026-11-10",
+  "partite": [
+    {"giornata": 11, "data": "2026-11-08", "casa": "Enna", "trasferta": "Reggina", "golCasa": 0, "golTrasf": 3,
+     "marcatori": [{"n": "Magrassi", "s": "t"}, {"n": "Magrassi", "s": "t"}, {"n": "Rossetti", "s": "t"}]},
+    {"giornata": 11, "data": "2026-11-08", "casa": "Sambiase", "trasferta": "Ragusa", "golCasa": 2, "golTrasf": 0,
+     "marcatori": [{"n": "Waller", "s": "c", "m": "2'"}, {"n": "Sueva", "s": "c", "m": "20'"}]},
+    {"giornata": 11, "data": "2026-11-08", "casa": "Castrumfavara", "trasferta": "Vibonese", "golCasa": 1, "golTrasf": 2,
+     "marcatori": [{"n": "Marsico", "s": "t"}, {"n": "Bellingardo", "s": "c"}, {"n": "Cosendey", "s": "t"}]},
+    {"giornata": 11, "data": "2026-11-08", "casa": "Milazzo", "trasferta": "Vigor Lamezia", "golCasa": 3, "golTrasf": 1,
+     "marcatori": [{"n": "Maimone", "s": "t", "m": "2'"}, {"n": "Saverino", "s": "c", "m": "27' st"}, {"n": "Saverino", "s": "c", "m": "37' st"}, {"n": "Giubrone", "s": "c", "m": "45' st"}]},
+    {"giornata": 11, "data": "2026-11-08", "casa": "Digiesse Praia Tortora", "trasferta": "Trapani", "golCasa": 0, "golTrasf": 2,
+     "marcatori": [{"n": "Jallow", "s": "t"}, {"n": "Jallow", "s": "t"}]}
+  ]
+}

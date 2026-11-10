@@ -1680,6 +1680,25 @@ function badge(t,lg){
   return `<span class="badge-remote${lg?" lg":""}"><img class="badge${lg?" lg":""}" src="${esc(logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="badge${lg?" lg":""}" style="--h:${h}" aria-hidden="true" hidden>${esc(SIGLA[t]||String(t).slice(0,3).toUpperCase())}</span></span>`;
 }
 function fmtDate(d){if(!d)return "";const [y,m,g]=d.split("-");const dt=new Date(+y,+m-1,+g);return dt.toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short"})}
+/* Risultati automatici: l'attività programmata li scrive in risultati.json (solo dati pubblici);
+   qui un editor o admin li copia nel database. Riempie solo risultati e marcatori mancanti, non sovrascrive mai. */
+let SYNCED=false;
+async function syncRisultati(){
+  if(SYNCED||!canWrite||!db||!Object.keys(CAL).length)return;SYNCED=true;
+  let f;try{const r=await fetch("risultati.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;f=await r.json()}catch(e){return}
+  let n=0;
+  for(const p of (f.partite||[])){
+    const lato=CALAB.includes(p.casa)?"casa":CALAB.includes(p.trasferta)?"trasferta":null;if(!lato||p.golCasa==null||p.golTrasf==null)continue;
+    const hit=Object.entries(CAL).filter(([,m])=>+m.giornata===+p.giornata&&m[lato]===p[lato]);if(hit.length!==1)continue;
+    const [id,m]=hit[0],patch={};
+    if(m.golCasa==null){patch.golCasa=+p.golCasa;patch.golTrasf=+p.golTrasf}
+    const gc=m.golCasa==null?+p.golCasa:+m.golCasa,gt=m.golCasa==null?+p.golTrasf:+m.golTrasf;
+    const mk=Array.isArray(p.marcatori)?p.marcatori:null;
+    if(!Array.isArray(m.marcatori)&&mk&&gc===+p.golCasa&&gt===+p.golTrasf&&mk.filter(x=>x.s==="c").length===gc&&mk.filter(x=>x.s==="t").length===gt)patch.marcatori=mk;
+    if(Object.keys(patch).length){try{await db.doc("calendario/"+id).update(patch);n++}catch(e){}}
+  }
+  if(n)toast(n===1?"Aggiornata 1 partita con risultati e marcatori":`Aggiornate ${n} partite con risultati e marcatori`);
+}
 function scorersHTML(m){
   if(m.golCasa==null)return "";
   if(!Array.isArray(m.marcatori)){return (m.golCasa+m.golTrasf)>0?`<div class="scorers"><span class="na">marcatori non disponibili</span></div>`:""}
@@ -2181,7 +2200,7 @@ function startApp(){
     CREST={};s.docs.forEach(d=>CREST[d.id]=d.data());
     render();revealApp();
   },()=>revealApp(true));
-  db.collection("calendario").onSnapshot(s=>{CAL={};s.docs.forEach(d=>CAL[d.id]=d.data());render()},()=>{});
+  db.collection("calendario").onSnapshot(s=>{CAL={};s.docs.forEach(d=>CAL[d.id]=d.data());render();syncRisultati()},()=>{});
   db.collection("glossario").onSnapshot(s=>{S.gloss={};s.docs.forEach(d=>S.gloss[d.id]=d.data());if(S.view==="glossario"&&!busy("#glossList"))renderGloss();done(s)},fail);
 }
 (async()=>{

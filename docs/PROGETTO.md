@@ -32,6 +32,7 @@ La vecchia versione era un artifact su claude.ai, "Database Girone I". Non va pi
 - **App installabile** sul telefono: `manifest.webmanifest`, icone in `assets/` (logo Serie D) e `sw.js`. Il service worker è minimo: non salva copie delle pagine, serve solo a rendere l'app installabile con un tocco su Android e a mostrare "Sei offline". Gli aggiornamenti del codice arrivano da soli alla riapertura dell'app.
 - **Database**: una tabella `docs (coll, id, data jsonb)`. In fondo a `index.html`, `makeDb()` imita l'interfaccia di Firestore (`collection().onSnapshot`, `doc().set/update/delete/get`) con aggiornamenti in tempo reale. Collezioni: `players`, `calendario`, `sessions`, `sessidx`, `matches`, `allenatori`, `stemmi`, `glossario`.
 - **Accessi**: email e password. Chi si registra resta "in attesa"; l'admin assegna lettore, editor o admin dal tab Accessi. I permessi sono applicati dal database (RLS) in `supabase/schema.sql`. Il primo account registrato è diventato admin.
+- **Aggiornamento dei risultati**: l'ambiente di Claude non può raggiungere Supabase, quindi i risultati passano dal repository. Un'attività programmata di Claude ("Risultati Serie D girone I", ogni domenica alle 19) cerca sul web risultati e marcatori delle calabresi e li aggiunge a `risultati.json`. Quando un editor o un admin apre l'app, `syncRisultati` legge il file e copia nel database solo i risultati e i marcatori che mancano; non sovrascrive mai un risultato già presente. Abbina le partite per giornata e squadra calabrese (in casa o in trasferta), quindi il nome dell'avversaria può essere scritto in modo diverso. I marcatori si copiano solo se il loro numero torna con il risultato.
 - **Backup**: dal tab Accessi, "Scarica backup completo" (JSON) e "Importa da file". I backup non vanno mai messi nel repository.
 
 ### Pagine (tab)
@@ -88,8 +89,8 @@ Ci sono anche il tema chiaro/scuro, il pulsante "Installa app" e la scheda gioca
   - rigore = 0,79;
   - il valore non viene salvato ma ricalcolato, quindi il modello si potrà ritarare con qualche centinaio di tiri di Serie D.
 - **Trasferimenti**: `squadra` è quella attuale (anche fuori girone, testo libero) e `ex` le precedenti. I numeri di maglia valgono per squadra (`numeri`). Esempio: Sabella, ex Vigor (numero 22), ora Vibonese.
-- **Risultati**: non si modificano a mano.
-- **Nessun dato nel repository**, perché è pubblico.
+- **Risultati**: non si modificano a mano. Arrivano da `risultati.json` (vedi sezione 3).
+- **Nessun dato nel repository**, perché è pubblico. Unica eccezione (decisa il 10 novembre 2026): `risultati.json`, con soli punteggi e marcatori, che sono già pubblici sui giornali.
 
 ## 6. Dati presenti (al 7 novembre 2026)
 
@@ -99,12 +100,12 @@ Ci sono anche il tema chiaro/scuro, il pulsante "Installa app" e la scheda gioca
 
 ## 7. Cose aperte
 
-- **Aggiornamento automatico dei risultati** (era un'attività programmata ogni domenica alle 19): scrive ancora nella vecchia versione su Claude, non in Supabase. Per scrivere su Supabase da un'attività automatica serve una soluzione sicura, senza esporre la chiave segreta. Da fare. Nel frattempo l'attività vecchia andrebbe disattivata.
+- **Risultati nel database**: arrivano solo quando un editor o un admin apre l'app dopo l'aggiornamento della domenica. Se nessuno la apre, restano nel file.
 - **Marcatori mancanti**: tutta la giornata 1, tre partite della giornata 4, il recupero Castrumfavara–Reggina.
 - **Numeri di maglia**: manca il numero di Sabella alla Vibonese; la Digiesse Praia Tortora non ha numeri.
 - **Correzioni di nomi**: il numero 11 del Sambiase è Giancarlo **Simigliani**; lo corregge il proprietario dalla scheda. I doppi cognomi sudamericani sono ordinati per l'ultimo cognome: da confermare.
 - **Verifiche fatte solo in simulazione** (database finto e telefono emulato): tempo reale tra dispositivi, installazione con un tocco su Android.
-- **Posizione in classifica nella scheda Rose**: non si può calcolare, perché il calendario contiene solo le partite delle 5 calabresi e non quelle delle altre squadre del girone. Si potrà aggiungere quando l'aggiornamento automatico dei risultati porterà tutto il girone.
+- **Posizione in classifica nella scheda Rose**: non si può calcolare, perché il calendario contiene solo le partite delle 5 calabresi e non quelle delle altre squadre del girone. Per aggiungerla, l'attività programmata dovrebbe raccogliere i risultati di tutto il girone.
 - **Tiri di squadra nella scheda Rose** (somma dei tiri e dei tiri in porta dei giocatori): rimandata dal proprietario.
 - **Idee non ancora fatte**: rigori calciati e segnati come colonna nelle statistiche; mappa dei tiri nel profilo; posizione separata per squadra (scartata per ora).
 

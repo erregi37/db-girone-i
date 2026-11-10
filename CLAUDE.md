@@ -6,7 +6,7 @@ Prima di iniziare leggi `docs/PROGETTO.md`: stato del progetto, decisioni prese,
 
 ## Regole
 1. **Una modifica alla volta.** Prima di iniziare, scarica l'ultima versione (pull). Dopo, fai commit con un messaggio chiaro in italiano e push subito.
-2. **Nessun dato nel repository.** Il repository è pubblico. Mai committare backup, file JSON di dati, rose, rilevazioni, email o chiavi segrete. La chiave `sb_publishable_...` in `index.html` è pubblica per progettazione; la `service_role`/secret key non deve mai comparire.
+2. **Nessun dato nel repository.** Il repository è pubblico. Mai committare backup, file JSON di dati, rose, rilevazioni, email o chiavi segrete. La chiave `sb_publishable_...` in `index.html` è pubblica per progettazione; la `service_role`/secret key non deve mai comparire. Unica eccezione, decisa dal proprietario il 10 novembre 2026: `risultati.json`, con soli punteggi e marcatori pubblici delle partite delle calabresi.
 3. **Un solo file per l'app.** `index.html` contiene HTML, CSS e JavaScript. Niente build, niente framework: deve funzionare aperto così com'è da GitHub Pages.
 4. **Non cambiare la struttura dei dati senza dirlo.** Il database è una tabella `docs (coll, id, data jsonb)`. Collezioni in uso: `players`, `calendario`, `sessions`, `sessidx`, `matches`, `allenatori`, `stemmi`, `glossario`. Rinominare campi rompe i dati già salvati.
 5. **Modifiche allo schema** vanno in `supabase/schema.sql` (rieseguibile) e vanno segnalate al proprietario, che deve rieseguirlo nel SQL Editor di Supabase.
