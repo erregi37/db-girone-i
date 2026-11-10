@@ -1,16 +1,1119 @@
 {
-  "nota": "Solo punteggi e marcatori pubblici delle partite delle calabresi. Li aggiorna l'attività automatica; l'app li copia nel database quando la apre un editor o un admin, riempiendo solo risultati e marcatori mancanti.",
-  "aggiornato": "2026-11-10",
-  "partite": [
-    {"giornata": 11, "data": "2026-11-08", "casa": "Enna", "trasferta": "Reggina", "golCasa": 0, "golTrasf": 3,
-     "marcatori": [{"n": "Magrassi", "s": "t"}, {"n": "Magrassi", "s": "t"}, {"n": "Rossetti", "s": "t"}]},
-    {"giornata": 11, "data": "2026-11-08", "casa": "Sambiase", "trasferta": "Ragusa", "golCasa": 2, "golTrasf": 0,
-     "marcatori": [{"n": "Waller", "s": "c", "m": "2'"}, {"n": "Sueva", "s": "c", "m": "20'"}]},
-    {"giornata": 11, "data": "2026-11-08", "casa": "Castrumfavara", "trasferta": "Vibonese", "golCasa": 1, "golTrasf": 2,
-     "marcatori": [{"n": "Marsico", "s": "t"}, {"n": "Bellingardo", "s": "c"}, {"n": "Cosendey", "s": "t"}]},
-    {"giornata": 11, "data": "2026-11-08", "casa": "Milazzo", "trasferta": "Vigor Lamezia", "golCasa": 3, "golTrasf": 1,
-     "marcatori": [{"n": "Maimone", "s": "t", "m": "2'"}, {"n": "Saverino", "s": "c", "m": "27' st"}, {"n": "Saverino", "s": "c", "m": "37' st"}, {"n": "Giubrone", "s": "c", "m": "45' st"}]},
-    {"giornata": 11, "data": "2026-11-08", "casa": "Digiesse Praia Tortora", "trasferta": "Trapani", "golCasa": 0, "golTrasf": 2,
-     "marcatori": [{"n": "Jallow", "s": "t"}, {"n": "Jallow", "s": "t"}]}
-  ]
+ "nota": "Solo punteggi e marcatori pubblici delle partite delle calabresi. Li aggiorna l'attività automatica; l'app li copia nel database quando la apre un editor o un admin, riempiendo solo risultati e marcatori mancanti.",
+ "aggiornato": "2026-11-10",
+ "partite": [
+  {
+   "giornata": 1,
+   "data": "2026-09-06",
+   "casa": "Enna",
+   "trasferta": "Digiesse Praia Tortora",
+   "golCasa": 0,
+   "golTrasf": 5,
+   "marcatori": [
+    {
+     "n": "Franchi",
+     "s": "t"
+    },
+    {
+     "n": "Francisco",
+     "s": "t"
+    },
+    {
+     "n": "Marino",
+     "s": "t"
+    },
+    {
+     "n": "Liano Gutierrez",
+     "s": "t"
+    },
+    {
+     "n": "Borgo",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 1,
+   "data": "2026-09-06",
+   "casa": "Nissa",
+   "trasferta": "Vigor Lamezia",
+   "golCasa": 3,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Palermo",
+     "s": "c"
+    },
+    {
+     "n": "Terranova",
+     "s": "c"
+    },
+    {
+     "n": "De Felice",
+     "s": "c"
+    },
+    {
+     "n": "Cantoro",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 1,
+   "data": "2026-09-06",
+   "casa": "Reggina",
+   "trasferta": "Licata",
+   "golCasa": 5,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Reis Daquinto",
+     "s": "c"
+    },
+    {
+     "n": "Rotulo",
+     "s": "c"
+    },
+    {
+     "n": "Abonckelet",
+     "s": "c"
+    },
+    {
+     "n": "Alma",
+     "s": "c"
+    },
+    {
+     "n": "Rossetti",
+     "s": "c"
+    }
+   ]
+  },
+  {
+   "giornata": 1,
+   "data": "2026-09-06",
+   "casa": "Sambiase",
+   "trasferta": "Gela",
+   "golCasa": 2,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Haberkon",
+     "s": "c"
+    },
+    {
+     "n": "Grisle",
+     "s": "c"
+    },
+    {
+     "n": "Vogiatzis",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 1,
+   "data": "2026-09-06",
+   "casa": "Trapani",
+   "trasferta": "Vibonese",
+   "golCasa": 0,
+   "golTrasf": 4,
+   "marcatori": [
+    {
+     "n": "Marsico",
+     "s": "t"
+    },
+    {
+     "n": "Marsico",
+     "s": "t"
+    },
+    {
+     "n": "Cosendey",
+     "s": "t"
+    },
+    {
+     "n": "Simpson Bittata",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 2,
+   "data": "2026-09-13",
+   "casa": "Digiesse Praia Tortora",
+   "trasferta": "Sambiase",
+   "golCasa": 1,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Strumia",
+     "s": "c"
+    },
+    {
+     "n": "Brandalisse",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 2,
+   "data": "2026-09-13",
+   "casa": "Modica",
+   "trasferta": "Reggina",
+   "golCasa": 0,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Girasole",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 2,
+   "data": "2026-09-13",
+   "casa": "Vibonese",
+   "trasferta": "Siracusa",
+   "golCasa": 1,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Guida",
+     "s": "t"
+    },
+    {
+     "n": "Semenzin",
+     "s": "c"
+    }
+   ]
+  },
+  {
+   "giornata": 2,
+   "data": "2026-09-13",
+   "casa": "Vigor Lamezia",
+   "trasferta": "Nuova Igea Virtus",
+   "golCasa": 2,
+   "golTrasf": 2,
+   "marcatori": [
+    {
+     "n": "Ranieri",
+     "s": "c"
+    },
+    {
+     "n": "Tumminelli",
+     "s": "t"
+    },
+    {
+     "n": "Harper",
+     "s": "t"
+    },
+    {
+     "n": "Cantoro",
+     "s": "c"
+    }
+   ]
+  },
+  {
+   "giornata": 3,
+   "data": "2026-09-16",
+   "casa": "Athletic Palermo",
+   "trasferta": "Digiesse Praia Tortora",
+   "golCasa": 1,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Bustos",
+     "s": "t",
+     "m": "28'"
+    },
+    {
+     "n": "Pisciotta",
+     "s": "c",
+     "m": "86'"
+    }
+   ]
+  },
+  {
+   "giornata": 3,
+   "data": "2026-09-16",
+   "casa": "Nuova Igea Virtus",
+   "trasferta": "Vibonese",
+   "golCasa": 4,
+   "golTrasf": 3,
+   "marcatori": [
+    {
+     "n": "Cosendey",
+     "s": "t",
+     "m": "31'"
+    },
+    {
+     "n": "Ferrara",
+     "s": "c",
+     "m": "45'"
+    },
+    {
+     "n": "Semenzin",
+     "s": "t",
+     "m": "58'"
+    },
+    {
+     "n": "Cosendey",
+     "s": "t",
+     "m": "61'"
+    },
+    {
+     "n": "Calafiore",
+     "s": "c",
+     "m": "69'",
+     "r": 1
+    },
+    {
+     "n": "Tumminelli",
+     "s": "c",
+     "m": "78'"
+    },
+    {
+     "n": "Faccetti",
+     "s": "c",
+     "m": "85'"
+    }
+   ]
+  },
+  {
+   "giornata": 3,
+   "data": "2026-09-16",
+   "casa": "Ragusa",
+   "trasferta": "Vigor Lamezia",
+   "golCasa": 1,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Diop",
+     "s": "t"
+    },
+    {
+     "n": "Capone",
+     "s": "c"
+    }
+   ]
+  },
+  {
+   "giornata": 3,
+   "data": "2026-09-16",
+   "casa": "Reggina",
+   "trasferta": "Avola",
+   "golCasa": 4,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Rotulo",
+     "s": "c"
+    },
+    {
+     "n": "Magrassi",
+     "s": "c"
+    },
+    {
+     "n": "Girasole",
+     "s": "c"
+    },
+    {
+     "n": "Jallow",
+     "s": "c"
+    }
+   ]
+  },
+  {
+   "giornata": 3,
+   "data": "2026-09-16",
+   "casa": "Sambiase",
+   "trasferta": "Modica",
+   "golCasa": 1,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Suéva",
+     "s": "c",
+     "m": "3'"
+    }
+   ]
+  },
+  {
+   "giornata": 4,
+   "data": "2026-09-20",
+   "casa": "Digiesse Praia Tortora",
+   "trasferta": "Siracusa",
+   "golCasa": 0,
+   "golTrasf": 0,
+   "marcatori": []
+  },
+  {
+   "giornata": 4,
+   "data": "2026-09-20",
+   "casa": "Milazzo",
+   "trasferta": "Sambiase",
+   "golCasa": 0,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Della Salandra",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 4,
+   "data": "2026-09-20",
+   "casa": "Vibonese",
+   "trasferta": "Athletic Palermo",
+   "golCasa": 3,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Cerutti",
+     "s": "c"
+    },
+    {
+     "n": "Marsico",
+     "s": "c"
+    },
+    {
+     "n": "Marsico",
+     "s": "c"
+    }
+   ]
+  },
+  {
+   "giornata": 4,
+   "data": "2026-09-20",
+   "casa": "Vigor Lamezia",
+   "trasferta": "Reggina",
+   "golCasa": 0,
+   "golTrasf": 3,
+   "marcatori": [
+    {
+     "n": "Toscano",
+     "s": "t"
+    },
+    {
+     "n": "Abonckelet",
+     "s": "t"
+    },
+    {
+     "n": "Abonckelet",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 5,
+   "data": "2026-09-27",
+   "casa": "Digiesse Praia Tortora",
+   "trasferta": "Gela",
+   "golCasa": 1,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Franchi",
+     "s": "c",
+     "m": "53'",
+     "r": 1
+    }
+   ]
+  },
+  {
+   "giornata": 5,
+   "data": "2026-09-27",
+   "casa": "Nissa",
+   "trasferta": "Vibonese",
+   "golCasa": 0,
+   "golTrasf": 2,
+   "marcatori": [
+    {
+     "n": "Ledesma",
+     "s": "t",
+     "m": "36'"
+    },
+    {
+     "n": "Simpson",
+     "s": "t",
+     "m": "69'"
+    }
+   ]
+  },
+  {
+   "giornata": 5,
+   "data": "2026-09-27",
+   "casa": "Reggina",
+   "trasferta": "Nuova Igea Virtus",
+   "golCasa": 2,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Toscano",
+     "s": "c",
+     "m": "76'"
+    },
+    {
+     "n": "Alma",
+     "s": "c",
+     "m": "90'"
+    }
+   ]
+  },
+  {
+   "giornata": 5,
+   "data": "2026-09-27",
+   "casa": "Sambiase",
+   "trasferta": "Vigor Lamezia",
+   "golCasa": 4,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Brandalisse",
+     "s": "c",
+     "m": "1'"
+    },
+    {
+     "n": "Brandalisse",
+     "s": "c",
+     "m": "32'"
+    },
+    {
+     "n": "Borriello",
+     "s": "t",
+     "m": "54'"
+    },
+    {
+     "n": "Brandalisse",
+     "s": "c",
+     "m": "71'"
+    },
+    {
+     "n": "Simigliani",
+     "s": "c",
+     "m": "90+4'"
+    }
+   ]
+  },
+  {
+   "giornata": 6,
+   "data": "2026-10-04",
+   "casa": "Licata",
+   "trasferta": "Sambiase",
+   "golCasa": 2,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Corallo",
+     "s": "c",
+     "m": "27' pt"
+    },
+    {
+     "n": "Greco",
+     "s": "c",
+     "m": "3' st"
+    },
+    {
+     "n": "Zenuni",
+     "s": "t",
+     "m": "34'"
+    }
+   ]
+  },
+  {
+   "giornata": 6,
+   "data": "2026-10-04",
+   "casa": "Trapani",
+   "trasferta": "Reggina",
+   "golCasa": 1,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Jallow",
+     "s": "c"
+    }
+   ]
+  },
+  {
+   "giornata": 6,
+   "data": "2026-10-04",
+   "casa": "Vibonese",
+   "trasferta": "Digiesse Praia Tortora",
+   "golCasa": 2,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Marsico",
+     "s": "c",
+     "m": "12' pt"
+    },
+    {
+     "n": "Castro",
+     "s": "c",
+     "m": "34' st"
+    }
+   ]
+  },
+  {
+   "giornata": 6,
+   "data": "2026-10-04",
+   "casa": "Vigor Lamezia",
+   "trasferta": "Castrumfavara",
+   "golCasa": 2,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Diop",
+     "s": "c"
+    },
+    {
+     "n": "Diop",
+     "s": "c"
+    }
+   ]
+  },
+  {
+   "giornata": 7,
+   "data": "2026-10-11",
+   "casa": "Digiesse Praia Tortora",
+   "trasferta": "Modica",
+   "golCasa": 5,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Musumeci",
+     "s": "c"
+    },
+    {
+     "n": "Gonzalez",
+     "s": "c"
+    },
+    {
+     "n": "Bustos",
+     "s": "c"
+    },
+    {
+     "n": "Candelma",
+     "s": "c"
+    },
+    {
+     "n": "Petrone",
+     "s": "c"
+    },
+    {
+     "n": "Cherchichi",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 7,
+   "data": "2026-10-11",
+   "casa": "Reggina",
+   "trasferta": "Vibonese",
+   "golCasa": 1,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Toscano",
+     "s": "c",
+     "m": "30'"
+    },
+    {
+     "n": "Cosendey",
+     "s": "t",
+     "m": "54'"
+    }
+   ]
+  },
+  {
+   "giornata": 7,
+   "data": "2026-10-11",
+   "casa": "Sambiase",
+   "trasferta": "Trapani",
+   "golCasa": 1,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Furlato",
+     "s": "c",
+     "m": "53'"
+    }
+   ]
+  },
+  {
+   "giornata": 7,
+   "data": "2026-10-11",
+   "casa": "Siracusa",
+   "trasferta": "Vigor Lamezia",
+   "golCasa": 3,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Guida",
+     "s": "c",
+     "m": "25'"
+    },
+    {
+     "n": "Zaka",
+     "s": "c",
+     "m": "27'"
+    },
+    {
+     "n": "Giacomarro",
+     "s": "c",
+     "m": "84'"
+    }
+   ]
+  },
+  {
+   "giornata": 8,
+   "data": "2026-10-18",
+   "casa": "Avola",
+   "trasferta": "Sambiase",
+   "golCasa": 1,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Tedesco",
+     "s": "c"
+    },
+    {
+     "n": "Walter",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 8,
+   "data": "2026-10-18",
+   "casa": "Milazzo",
+   "trasferta": "Digiesse Praia Tortora",
+   "golCasa": 3,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Corso",
+     "s": "c"
+    },
+    {
+     "n": "Retucci",
+     "s": "c"
+    },
+    {
+     "n": "Giubrone",
+     "s": "c"
+    },
+    {
+     "n": "Franchi",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 8,
+   "data": "2026-10-18",
+   "casa": "Nissa",
+   "trasferta": "Reggina",
+   "golCasa": 1,
+   "golTrasf": 2,
+   "marcatori": [
+    {
+     "n": "Alagna",
+     "s": "c"
+    },
+    {
+     "n": "Abonckelett",
+     "s": "t"
+    },
+    {
+     "n": "Magrassi",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 8,
+   "data": "2026-10-18",
+   "casa": "Vibonese",
+   "trasferta": "Gela",
+   "golCasa": 1,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Marsico",
+     "s": "c"
+    },
+    {
+     "n": "Di Stefano",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 8,
+   "data": "2026-10-18",
+   "casa": "Vigor Lamezia",
+   "trasferta": "Enna",
+   "golCasa": 3,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Sanzone",
+     "s": "c"
+    },
+    {
+     "n": "Sanzone",
+     "s": "c"
+    },
+    {
+     "n": "Ranieri",
+     "s": "c"
+    }
+   ]
+  },
+  {
+   "giornata": 9,
+   "data": "2026-10-28",
+   "casa": "Castrumfavara",
+   "trasferta": "Reggina",
+   "golCasa": 2,
+   "golTrasf": 2,
+   "marcatori": [
+    {
+     "n": "Marchica",
+     "s": "c",
+     "m": "15' pt"
+    },
+    {
+     "n": "Alma",
+     "s": "t",
+     "m": "20' pt"
+    },
+    {
+     "n": "Abonckelet",
+     "s": "t",
+     "m": "14' st"
+    },
+    {
+     "n": "Deiana Testoni",
+     "s": "c",
+     "m": "29' st"
+    }
+   ]
+  },
+  {
+   "giornata": 9,
+   "data": "2026-10-25",
+   "casa": "Digiesse Praia Tortora",
+   "trasferta": "Vigor Lamezia",
+   "golCasa": 1,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Petrone",
+     "s": "c",
+     "m": "42'"
+    }
+   ]
+  },
+  {
+   "giornata": 9,
+   "data": "2026-10-25",
+   "casa": "Ragusa",
+   "trasferta": "Vibonese",
+   "golCasa": 1,
+   "golTrasf": 3,
+   "marcatori": [
+    {
+     "n": "Golfo",
+     "s": "c",
+     "m": "2'"
+    },
+    {
+     "n": "Piriz",
+     "s": "t",
+     "m": "9'"
+    },
+    {
+     "n": "Leonori",
+     "s": "t",
+     "m": "st"
+    },
+    {
+     "n": "Bertolo",
+     "s": "t",
+     "m": "st"
+    }
+   ]
+  },
+  {
+   "giornata": 9,
+   "data": "2026-10-25",
+   "casa": "Sambiase",
+   "trasferta": "Nissa",
+   "golCasa": 1,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Suéva",
+     "s": "c",
+     "m": "32'"
+    }
+   ]
+  },
+  {
+   "giornata": 10,
+   "data": "2026-11-01",
+   "casa": "Licata",
+   "trasferta": "Digiesse Praia Tortora",
+   "golCasa": 0,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Nanapere",
+     "s": "t",
+     "m": "42' st"
+    }
+   ]
+  },
+  {
+   "giornata": 10,
+   "data": "2026-11-01",
+   "casa": "Nuova Igea Virtus",
+   "trasferta": "Sambiase",
+   "golCasa": 2,
+   "golTrasf": 4,
+   "marcatori": [
+    {
+     "n": "Faccetti",
+     "s": "c",
+     "m": "13' pt"
+    },
+    {
+     "n": "Haberkorn",
+     "s": "t",
+     "m": "25' pt"
+    },
+    {
+     "n": "Haberkorn",
+     "s": "t",
+     "m": "10' st"
+    },
+    {
+     "n": "Suéva",
+     "s": "t",
+     "m": "21' st"
+    },
+    {
+     "n": "Colombatti",
+     "s": "c",
+     "m": "29' st",
+     "a": 1
+    },
+    {
+     "n": "Della Salandra",
+     "s": "t",
+     "m": "49' st"
+    }
+   ]
+  },
+  {
+   "giornata": 10,
+   "data": "2026-11-01",
+   "casa": "Reggina",
+   "trasferta": "Ragusa",
+   "golCasa": 5,
+   "golTrasf": 2,
+   "marcatori": [
+    {
+     "n": "Guida",
+     "s": "c",
+     "m": "21' pt"
+    },
+    {
+     "n": "Golfo",
+     "s": "t",
+     "m": "24' pt"
+    },
+    {
+     "n": "Acquadro",
+     "s": "c",
+     "m": "30' pt"
+    },
+    {
+     "n": "Guida",
+     "s": "c",
+     "m": "2' st"
+    },
+    {
+     "n": "Franchini",
+     "s": "c",
+     "m": "25' st"
+    },
+    {
+     "n": "Capone",
+     "s": "t",
+     "m": "31' st"
+    },
+    {
+     "n": "Girasole",
+     "s": "c",
+     "m": "34' st"
+    }
+   ]
+  },
+  {
+   "giornata": 10,
+   "data": "2026-11-01",
+   "casa": "Vibonese",
+   "trasferta": "Milazzo",
+   "golCasa": 2,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Leonori",
+     "s": "c",
+     "m": "18' pt"
+    },
+    {
+     "n": "Sowe",
+     "s": "t",
+     "m": "34' st"
+    },
+    {
+     "n": "Marsico",
+     "s": "c",
+     "m": "46' st"
+    }
+   ]
+  },
+  {
+   "giornata": 10,
+   "data": "2026-11-01",
+   "casa": "Vigor Lamezia",
+   "trasferta": "Athletic Palermo",
+   "golCasa": 0,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Lores Varela",
+     "s": "t",
+     "m": "42' st"
+    }
+   ]
+  },
+  {
+   "giornata": 11,
+   "data": "2026-11-08",
+   "casa": "Enna",
+   "trasferta": "Reggina",
+   "golCasa": 0,
+   "golTrasf": 3,
+   "marcatori": [
+    {
+     "n": "Magrassi",
+     "s": "t"
+    },
+    {
+     "n": "Magrassi",
+     "s": "t"
+    },
+    {
+     "n": "Rossetti",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 11,
+   "data": "2026-11-08",
+   "casa": "Sambiase",
+   "trasferta": "Ragusa",
+   "golCasa": 2,
+   "golTrasf": 0,
+   "marcatori": [
+    {
+     "n": "Waller",
+     "s": "c",
+     "m": "2'"
+    },
+    {
+     "n": "Sueva",
+     "s": "c",
+     "m": "20'"
+    }
+   ]
+  },
+  {
+   "giornata": 11,
+   "data": "2026-11-08",
+   "casa": "Castrumfavara",
+   "trasferta": "Vibonese",
+   "golCasa": 1,
+   "golTrasf": 2,
+   "marcatori": [
+    {
+     "n": "Marsico",
+     "s": "t"
+    },
+    {
+     "n": "Bellingardo",
+     "s": "c"
+    },
+    {
+     "n": "Cosendey",
+     "s": "t"
+    }
+   ]
+  },
+  {
+   "giornata": 11,
+   "data": "2026-11-08",
+   "casa": "Milazzo",
+   "trasferta": "Vigor Lamezia",
+   "golCasa": 3,
+   "golTrasf": 1,
+   "marcatori": [
+    {
+     "n": "Maimone",
+     "s": "t",
+     "m": "2'"
+    },
+    {
+     "n": "Saverino",
+     "s": "c",
+     "m": "27' st"
+    },
+    {
+     "n": "Saverino",
+     "s": "c",
+     "m": "37' st"
+    },
+    {
+     "n": "Giubrone",
+     "s": "c",
+     "m": "45' st"
+    }
+   ]
+  },
+  {
+   "giornata": 11,
+   "data": "2026-11-08",
+   "casa": "Digiesse Praia Tortora",
+   "trasferta": "Trapani",
+   "golCasa": 0,
+   "golTrasf": 2,
+   "marcatori": [
+    {
+     "n": "Jallow",
+     "s": "t"
+    },
+    {
+     "n": "Jallow",
+     "s": "t"
+    }
+   ]
+  }
+ ]
 }

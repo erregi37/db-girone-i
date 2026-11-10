@@ -101,7 +101,8 @@ Ci sono anche il tema chiaro/scuro, il pulsante "Installa app" e la scheda gioca
 ## 7. Cose aperte
 
 - **Risultati nel database**: arrivano solo quando un editor o un admin apre l'app dopo l'aggiornamento della domenica. Se nessuno la apre, restano nel file.
-- **Marcatori mancanti**: tutta la giornata 1, tre partite della giornata 4, il recupero Castrumfavara–Reggina.
+- **Marcatori mancanti** (giornata 1, tre partite della giornata 4, Trapani–Reggina, recupero Castrumfavara–Reggina): aggiunti a `risultati.json` il 10 novembre 2026; entrano nel database alla prossima apertura dell'app da parte di un editor o admin.
+- **Vibonese–Digiesse Praia Tortora (6ª giornata)**: nel database è 2-0 (Marsico, Castro), ma lanuovacalabria.it riporta 1-0 (Marsico). Da verificare; l'app non sovrascrive risultati già presenti.
 - **Numeri di maglia**: manca il numero di Sabella alla Vibonese; la Digiesse Praia Tortora non ha numeri.
 - **Correzioni di nomi**: il numero 11 del Sambiase è Giancarlo **Simigliani**; lo corregge il proprietario dalla scheda. I doppi cognomi sudamericani sono ordinati per l'ultimo cognome: da confermare.
 - **Verifiche fatte solo in simulazione** (database finto e telefono emulato): tempo reale tra dispositivi, installazione con un tocco su Android.
