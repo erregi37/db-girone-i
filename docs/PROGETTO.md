@@ -70,6 +70,8 @@ Ci sono anche il tema chiaro/scuro, il pulsante "Installa app" e la scheda gioca
 - **Accanto al campo**: Annulla, Cambio, Ruolo (scambio di posizione), Modulo; sotto Gol subito e i cartellini vicini, Giallo (giallo) e Rosso (rosso); poi gli eventi a coppie ✓/✗ su 4 colonne: Passaggio, Giocata, Possesso e falli, Tiro, Difesa, Recuperi e portiere. C'è il pulsante **Rigore** nella riga dei tiri: apre la porta, si sceglie l'esito (gol, parato, fuori/palo) e si tocca dove ha calciato.
 - **Fuorigioco**: non si rileva (deciso il 14 novembre 2026): non è chiaro a chi attribuirlo, a chi è in fuorigioco o a chi passa.
 - **Recupero che non diventa possesso** (palla tolta all'avversario che poi va fuori o resta contesa): si segna solo Contrasto (se l'ha tolta a chi la portava) o Intercetto (se ha tagliato un passaggio). Non si aggiunge Palla persa, perché il giocatore non ha mai avuto la palla.
+- **Anticipo su lancio lungo** (il nostro arriva prima e allontana, senza cercare un compagno): si segna solo Intercetto. Il pallone allontanato non conta come passaggio, né riuscito né sbagliato.
+- **Duello aereo**: solo se entrambi provano davvero a prendere la palla di testa. Se uno salta e l'altro non ci prova (resta a terra, fa il contromovimento), non è duello.
 - **Controllo under** nella barra: ✓/✗ per 08, 07 e 06.
 - **Salvataggio** continuo nel database, più una copia nel browser.
 
