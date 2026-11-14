@@ -71,6 +71,7 @@ Ci sono anche il tema chiaro/scuro, il pulsante "Installa app" e la scheda gioca
 - **Fuorigioco**: non si rileva (deciso il 14 novembre 2026): non è chiaro a chi attribuirlo, a chi è in fuorigioco o a chi passa.
 - **Recupero che non diventa possesso** (palla tolta all'avversario che poi va fuori o resta contesa): si segna solo Contrasto (se l'ha tolta a chi la portava) o Intercetto (se ha tagliato un passaggio). Non si aggiunge Palla persa, perché il giocatore non ha mai avuto la palla.
 - **Anticipo su lancio lungo** (il nostro arriva prima e allontana, senza cercare un compagno): si segna solo Intercetto. Il pallone allontanato non conta come passaggio, né riuscito né sbagliato.
+- **Lancio lungo in costruzione** (abbiamo il possesso, il giocatore lancia e la palla va agli avversari): Passaggio sbagliato, senza distinguere lanci lunghi e passaggi corti. Differenza con l'anticipo: qui il giocatore aveva la palla e sceglieva lui cosa farne.
 - **Duello aereo**: solo se entrambi provano davvero a prendere la palla di testa. Se uno salta e l'altro non ci prova (resta a terra, fa il contromovimento), non è duello.
 - **Controllo under** nella barra: ✓/✗ per 08, 07 e 06.
 - **Salvataggio** continuo nel database, più una copia nel browser.
